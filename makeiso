@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+prepareiso () {
+	# we really need this folder as quick as possible
+	mkdir -p "$isosyncdir"
+	# create an empty 20GB ext4 fs were our rootfs will stay
+	dd if=/dev/zero of=""$isosyncdir".img" bs=50M count=400
+	mkfs.ext4 ""$isosyncdir".img"
+	# create live iso layout
+	mkdir -p "$isostagingdir"
+	mkdir -p "$isobootdir"
+	mkdir -p "$isoefibootdir"
+	mkdir -p "$isoliveosdir"
+	mkdir -p "$isosupersquashdir"
+	mkdir -p "$isolivesqfsdir"
+	# mount && copy core stage 4 image
+	mount -t squashfs "$chrootx64" "$isostagingdir"
+	mount -t ext4 ""$isosyncdir".img" "$isosyncdir"
+	rsync -aHAXr --progress "$isostagingdir/" "$isosyncdir/"
+	# copy kernel into cdroot
+	cp -avx ""$isosyncdir"/boot/"$isokernelname"" ""$isorootdir"/boot/vmlinuz"
+	# generate live initramfs
+	isostart
+	isoramfs
+	isostop
+	# copy live initramfs into cdroot
+	mv ""$isosyncdir"/boot/"$isodracutrd"" ""$isorootdir"/boot/initrd"
+	# generate live efi image
+	isostart
+	isoefiimg
+	isostop
+	# copy efi image into cdroot
+	mv ""$isosyncdir"/root/bootx64.efi" "$isoefibootdir"
+	chmod 755 ""$isoefibootdir"/bootx64.efi"
+	# generate grub chainloader for syslinux
+	isostart
+	isochainload
+	isostop
+	# copy chainloader parts into cdroot
+	mv ""$isosyncdir"/root/core.img" "$isobootdir"
+	cp -avx ""$isosyncdir"/usr/lib64/grub/i386-pc/lnxboot.img" "$isobootdir"
+	# configure portage && give up control for package / desktop environment installation
+	isostart
+	isooverlays
+	isobuildsystem
+	isousertree
+	isochroot
+	isostop
+	# enable system services
+	isostart
+	isoservices
+	isostop
+	# unmount rootfs before compression
+	umount -l "$isosyncdir" > /dev/null 2>&1
+	# move rootfs in place
+	mv ""$isosyncdir".img"  "$isolivesqfsdir"
+	# squash rootfs with best compression
+	mksquashfs "$isosupersquashdir" ""$isorootdir"/squashfs.img" -b 1048576 -comp xz -Xdict-size 100%
+	# move squashed rootfs in place
+	mv ""$isorootdir/"squashfs.img" "$isoliveosdir"
+}
+
+bootcoreiso () {
+	# configure live bootloader
+	git clone https://gitlab.com/"$releasename"/boot-core.git "$bootcorepath"
+	cp -avx "$bootcorefiles" "$isorootdir"
+}
+
+cleanupiso () {
+	umount "$isostagingdir"
+	rm -rf "$isosyncdir"
+	rm -rf "$isostagingdir"
+	rm -rf "$isosupersquashdir"
+	rm -rf "$bootcorepath"
+}
+
+makeiso () {
+	grub2-mkrescue -o ""$releasename"-"$releasetarget"-"$releaseversion"-"$isomainarch".iso" "$isorootdir"
+}
+
+main () {
+	chrootchecksum
+	prepareiso
+	bootcoreiso
+	cleanupiso
+	makeiso
+}
+
+main

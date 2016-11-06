@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Say Hello to Vasile, a modular script to build Redcore Linux packages && ISO images using a clean squashfs + overlayfs chroot
+# Main author : Ghiunhan Mamut (aka V3n3RiX)
+# Dependencies : kernel built with squashfs + overlayfs + loopback support && sys-fs/grub:2 && sys-fs/squashfs-tools && dev-libs/libisoburn && sys-fs/mtools
+#
+
+# Import our variables and functions
+
+source /usr/lib/vasile/libvasile
+
+# Vasile need root privileges and a proper kernel to run
+# Also, running it in live mode is a really bad idea
+
+checkroot
+checkiflive
+kernelconfig
+
+
+case $1 in
+	--makepkg)
+		source /usr/share/vasile/makepkg
+		;;
+	--makeiso)
+		source /usr/share/vasile/makeiso
+		;;
+	--resetmode)
+		source /usr/share/vasile/modereset
+		;;
+	--usermode)
+		source /usr/share/vasile/modereset
+		source /usr/share/vasile/usermodeset
+		;;
+	--devmode)
+		source /usr/share/vasile/modereset
+		source /usr/share/vasile/devmodeset
+		;;
+	--help)
+		einfo "Usage: vasile [options]"
+		einfo ""
+		einfo "Options:"
+		einfo "--makepkg : build package/target in a clean squashed core"
+		einfo "--makeiso : build iso based on clean squashed core + targets"
+		einfo "--resetmode : reset INSTALLED Redcore Linux system state - You're on your own, you've been warned!"
+		einfo "--usermode : switch INSTALLED Redcore Linux system state to usermode - use binary packages from repositories"
+		einfo "--devmode : switch INSTALLED Redcore Linux system state to devmode (aka Gentoo mode) - use source packages from portage tree"
+		einfo "--help : display this help and exit"
+		;;
+	*)
+		eerror "error: no operation specified, use --help for help"
+		;;
+esac
+
+exit 0

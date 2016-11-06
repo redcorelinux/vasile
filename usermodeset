@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+export local portagedir="/usr/portage"
+export local confdir="/etc/portage"
+export local gitdir="/opt/kogaion-build/conf/intel/portage"
+
+fetch_usermode_portage_tree() {
+	if [[ ! -d "$portagedir"/.git ]] ; then
+		cd "$portagedir" && git init > /dev/null 2>&1
+		git remote add origin https://gitlab.com/kogaion/portage.git
+		git config core.sparsecheckout true
+		echo "profiles/*" >> .git/info/sparse-checkout
+		echo "metadata/*" >> .git/info/sparse-checkout
+		echo "eclass/*" >> .git/info/sparse-checkout
+		echo ".gitignore" >> .git/info/sparse-checkout
+		git pull --depth=1 origin master
+		git branch -u origin/master master
+		rm -rf ""$portagedir"/profiles/updates"
+	fi
+}
+
+set_usermode_portage_tree() {
+	ln -sf "$gitdir" "$confdir"
+	ln -sf "$confdir"/make.conf.amd64-user "$confdir"/make.conf
+	eselect profile set 1
+	env-update
+	. /etc/profile
+}
+
+main() {
+	fetch_usermode_portage_tree
+	set_usermode_portage_tree
+}
+
+main

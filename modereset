@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+export local portagedir="/usr/portage"
+export local confdir="/etc/portage"
+export local gitdir="/opt/kogaion-build"
+
+empty_portage_tree() {
+	if [ -d ""$portagedir"/.git" ] ; then
+		find "$portagedir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
+	fi
+}
+
+reset_portage_config() {
+	rm ""$confdir"/make.conf"
+	rm ""$confdir"/make.profile"
+	rm "$confdir"
+	rm -rf "$gitdir"
+}
+
+fetch_portage_config() {
+	pushd /opt > /dev/null 2>&1
+	git clone https://gitlab.com/kogaion/kogaion-build.git > /dev/null 2>&1
+	popd > /dev/null 2>&1
+}
+
+main () {
+	empty_portage_tree
+	reset_portage_config
+	fetch_portage_config
+}
+main

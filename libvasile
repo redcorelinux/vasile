@@ -1,0 +1,221 @@
+#!/usr/bin/env bash
+
+# import gentoo functions
+source /lib/gentoo/functions.sh
+
+# generic variables
+
+export local releasename="kogaion"
+export local releasetarget="desktop"
+export local releaseversion="3"
+export local kernelver="4.8.5-"$releasename""
+export local chrootx64=""$releasename"_"$releaseversion"_core_x64.squashfs"
+export local chrootx64md5=""$chrootx64".md5"
+
+# build variables
+
+export local rodir="rodir"
+export local rwdir="rwdir"
+export local workdir="workdir" # only needed for overlayfs on kernel greather than 3.18
+export local overlaydir="overlaydir"
+export local chrootuser="root"
+export local chroottarget="${@:2}"
+export local chrootbuildtarget="emerge -kav "$chroottarget""
+export local chrootdevtree="/usr/share/kvasile/devmodeset"
+export local chrootmainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
+export local chrootbuildgit="cd /opt && git clone https://gitlab.com/"$releasename"/"$releasename"-build.git"
+
+# iso variables
+
+export local bootcorepath="/tmp/bootcore"
+export local bootcorefiles="/tmp/bootcore/cdroot/boot"
+export local isouser="root"
+export local isousertree="/usr/share/kvasile/usermodeset"
+export local isomainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
+export local isobuildgit="cd /opt && git clone https://gitlab.com/"$releasename"/"$releasename"-build.git"
+
+export local isodracutcmd="dracut -N -a dmsquash-live -a pollcdrom -o systemd -o systemd-initrd -o systemd-networkd -o dracut-systemd --force --kver "$kernelver""
+export local isodracutrd="initramfs-"$kernelver".img"
+export local isoeficmd="grub2-mkimage -d /usr/lib64/grub/x86_64-efi -o bootx64.efi -O x86_64-efi ext2 fat udf btrfs ntfs reiserfs xfs hfsplus lvm ata part_msdos part_gpt part_apple bsd search_fs_uuid normal chain iso9660 configfile help loadenv reboot cat search memdisk tar boot linux chain"
+export local isochainloadcmd="grub2-mkimage -d /usr/lib64/grub/i386-pc -o core.img -O i386-pc biosdisk part_msdos fat"
+export local isomainarch="x86_64"
+export local isorootdir=""$releasename"-"$releasetarget"-"$releaseversion"-"$isomainarch""
+export local isokernelname="kernel-genkernel-"$isomainarch"-"$kernelver""
+export local isostagingdir="/tmp/"$isorootdir""
+export local isosupersquashdir=""$isorootdir"/CDroot"
+export local isolivesqfsdir=""$isosupersquashdir"/LiveOS"
+export local isoliveosdir=""$isorootdir"/LiveOS"
+export local isosyncdir=""$isorootdir"/rootfs"
+export local isobootdir=""$isorootdir"/boot/grub"
+export local isoefibootdir=""$isorootdir"/efi/boot"
+
+# generic functions (used for both build && iso creation)
+
+kernelconfig () {
+	if [[ $(zgrep 'CONFIG_OVERLAY_FS=' /proc/config.gz) && $(zgrep "CONFIG_SQUASHFS=" /proc/config.gz) &&  $(zgrep "CONFIG_BLK_DEV_LOOP=" /proc/config.gz) ]] ; then
+		einfo "Kernel configuration seems OK, moving on"
+		sleep 1
+	else
+		eerror "Vasile needs OVERLAYFS && SQUASHFS && LOOP DEVICES to work"
+		eerror "Please rebuild the kernel with those activated to use it"
+		exit 1
+	fi
+}
+
+checkroot () {
+	if [[ "$(whoami)" != root ]] ; then
+		eerror "You're not root?...No cookies for you, go away !!!"
+		exit 1
+	fi
+}
+
+checkiflive () {
+	if [[ -L /dev/mapper/live-base ]] ; then
+		eerror "Running in Live mode is unsupported"
+		exit 1
+	fi
+}
+
+chrootchecksum () {
+	while : true ; do
+		if [[ -f "$chrootx64" && -f "$chrootx64md5" ]] ; then
+			einfo "Squashed chroot && Checksum file found"
+			if [[ "$(md5sum -c "$chrootx64md5")" ]] ; then
+				einfo "Squashed chroot checksum passed"
+				sleep 1
+				break
+			else
+				eerror "Squashed chroot checksum failed"
+				exit 1
+			fi
+		else
+			eerror "Squashed chroot || Checksum file not found"
+			exit 1
+		fi
+	done
+}
+
+# build functions
+
+chrootstop () {
+	umount -l "$overlaydir"/proc > /dev/null 2>&1
+	umount -l "$overlaydir"/sys > /dev/null 2>&1
+	umount -l "$overlaydir"/dev/pts > /dev/null 2>&1
+	umount -l "$overlaydir"/dev/shm > /dev/null 2>&1
+	umount -l "$overlaydir"/dev > /dev/null 2>&1
+	umount -l "$overlaydir"/tmp > /dev/null 2>&1
+	umount -l "$overlaydir"/usr/portage/packages > /dev/null 2>&1
+	umount -l "$overlaydir"/usr/portage/distfiles > /dev/null 2>&1
+	umount -l "$overlaydir" > /dev/null 2>&1
+	umount -l "$rodir" > /dev/null 2>&1
+}
+
+chrootstart () {
+	mount -t squashfs "$chrootx64" "$rodir"
+	mount -t overlay -o lowerdir="$rodir",upperdir="$rwdir",workdir="$workdir" overlay "$overlaydir"
+	mount -o bind packages "$overlaydir"/usr/portage/packages
+	mount -o bind distfiles "$overlaydir"/usr/portage/distfiles
+	mount -t proc proc "$overlaydir"/proc
+	mount -t sysfs sysfs "$overlaydir"/sys
+	mount -t devtmpfs -o relatime,size=3055348k,nr_inodes=763837,mode=755 none "$overlaydir"/dev
+	mount -t devpts -o nosuid,noexec,relatime,gid=5,mode=620 none "$overlaydir"/dev/pts
+	mount -t tmpfs -o nosuid,nodev none "$overlaydir"/dev/shm
+	mount -t tmpfs -o nosuid,nodev,noexec none  "$overlaydir"/tmp
+}
+
+chrootdevtree () {
+	einfo "Injecting devmode portage tree"
+	sleep 1
+	chroot "$overlaydir" su - "$chrootuser" -c "$chrootdevtree"
+}
+
+chrootoverlays () {
+	einfo "Injecting "$releasename" "$releasetarget" overlay"
+	sleep 1
+	chroot "$overlaydir" su - "$chrootuser" -c "$chrootmainoverlay"
+}
+
+chrootbuildsystem () {
+	einfo "Injecting "$releasename" buildsystem"
+	sleep 1
+	chroot "$overlaydir" su - "$chrootuser" -c "$chrootbuildgit"
+}
+
+chrootbuild () {
+	einfo "All systems are go!"
+	sleep 1
+	chroot "$overlaydir" su - "$chrootuser" -c "$chrootbuildtarget"
+}
+
+chrootx64 () {
+	einfo "DROPPING YOU TO A ROOT SHELL INTO BUILD ENVIRONMENT"
+	einfo "FIX FAILURES && ADJUST PORTAGE CONFIGURATION FILES"
+	einfo "TEST USEFLAGS && KEYWORDS && MASKS IF REQUIRED"
+	einfo "IN THE END : DO NOT FORGET TO COMMIT YOUR CHANGES"
+	chroot "$overlaydir" su - "$chrootuser"
+}
+
+# iso functions
+
+isostart () {
+	mount -o bind packages "$isosyncdir"/usr/portage/packages
+	mount -t proc proc "$isosyncdir"/proc
+	mount -t sysfs sysfs "$isosyncdir"/sys
+	mount -t devtmpfs -o relatime,size=3055348k,nr_inodes=763837,mode=755 none "$isosyncdir"/dev
+	mount -t devpts -o nosuid,noexec,relatime,gid=5,mode=620 none "$isosyncdir"/dev/pts
+	mount -t tmpfs -o nosuid,nodev none "$isosyncdir"/dev/shm
+	mount -t tmpfs -o nosuid,nodev,noexec none  "$isosyncdir"/tmp
+}
+
+isostop () {
+	umount -l "$isosyncdir"/proc > /dev/null 2>&1
+	umount -l "$isosyncdir"/sys > /dev/null 2>&1
+	umount -l "$isosyncdir"/dev/pts > /dev/null 2>&1
+	umount -l "$isosyncdir"/dev/shm > /dev/null 2>&1
+	umount -l "$isosyncdir"/dev > /dev/null 2>&1
+	umount -l "$isosyncdir"/tmp > /dev/null 2>&1
+	umount -l "$isosyncdir"/usr/portage/packages > /dev/null 2>&1
+}
+
+isousertree () {
+	einfo "Injecting usermode portage tree"
+	sleep 1
+	chroot "$isosyncdir" su - "$isouser" -c "$isousertree"
+}
+
+isooverlays () {
+	einfo "Injecting "$releasename" "$releasetarget" overlay"
+	sleep 1
+	chroot "$isosyncdir" su - "$isouser" -c "$isomainoverlay"
+}
+
+isobuildsystem () {
+	einfo "Injecting "$releasename" buildsystem"
+	sleep 1
+	chroot "$isosyncdir" su - "$isouser" -c "$isobuildgit"
+}
+
+isoramfs () {
+	chroot "$isosyncdir" su - "$isouser" -c "$isodracutcmd"
+}
+
+isoefiimg () {
+	chroot "$isosyncdir" su - "$isouser" -c "$isoeficmd"
+}
+
+isochainload () {
+	chroot "$isosyncdir" su - "$isouser" -c "$isochainloadcmd"
+}
+
+isoservices () {
+	for service in avahi-daemon cups connman dkms dm-event kogaionlive lightdm lvm2-lvmetad lvm2-monitor NetworkManager ModemManager virtualbox-guest-additions ; do
+		chroot "$isosyncdir" su - "$isouser" -c "systemctl enable "$service""
+	done
+}
+
+isochroot () {
+	einfo "DROPPING YOU TO A ROOT SHELL INTO ISO ENVIRONMENT"
+	einfo "INSTALL APPS & TARGETS & DES YOU WANT INSIDE ISO"
+	einfo "EXIT WHEN YOU'RE DONE AND I'LL CREATE THE IMAGE"
+	chroot "$isosyncdir" su - "$isouser"
+}
