@@ -2,12 +2,12 @@
 
 export local portagedir="/usr/portage"
 export local confdir="/etc/portage"
-export local gitdir="/opt/kogaion-build/conf/intel/portage"
+export local gitdir="/opt/redcore-build/conf/intel/portage"
 
 fetch_usermode_portage_tree() {
 	if [[ ! -d "$portagedir"/.git ]] ; then
 		cd "$portagedir" && git init > /dev/null 2>&1
-		git remote add origin https://gitlab.com/kogaion/portage.git
+		git remote add origin https://gitlab.com/redcore/portage.git
 		git config core.sparsecheckout true
 		echo "profiles/*" >> .git/info/sparse-checkout
 		echo "metadata/*" >> .git/info/sparse-checkout

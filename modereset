@@ -2,7 +2,7 @@
 
 export local portagedir="/usr/portage"
 export local confdir="/etc/portage"
-export local gitdir="/opt/kogaion-build"
+export local gitdir="/opt/redcore-build"
 
 empty_portage_tree() {
 	if [ -d ""$portagedir"/.git" ] ; then
@@ -19,7 +19,7 @@ reset_portage_config() {
 
 fetch_portage_config() {
 	pushd /opt > /dev/null 2>&1
-	git clone https://gitlab.com/kogaion/kogaion-build.git > /dev/null 2>&1
+	git clone https://gitlab.com/redcore/redcore-build.git > /dev/null 2>&1
 	popd > /dev/null 2>&1
 }
 

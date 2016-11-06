@@ -2,12 +2,12 @@
 
 export local portagedir="/usr/portage"
 export local confdir="/etc/portage"
-export local gitdir="/opt/kogaion-build/conf/intel/portage"
+export local gitdir="/opt/redcore-build/conf/intel/portage"
 
 fetch_devmode_portage_tree() {
 	if [[ ! -d "$portagedir"/.git ]] ; then
 		cd "$portagedir" && git init > /dev/null 2>&1
-		git remote add origin https://gitlab.com/kogaion/portage.git
+		git remote add origin https://gitlab.com/redcore/portage.git
 		git pull --depth=1 origin master
 		git branch -u origin/master master
 		rm -rf ""$portagedir"/profiles/updates"

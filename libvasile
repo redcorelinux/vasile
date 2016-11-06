@@ -208,7 +208,7 @@ isochainload () {
 }
 
 isoservices () {
-	for service in avahi-daemon cups connman dkms dm-event kogaionlive lightdm lvm2-lvmetad lvm2-monitor NetworkManager ModemManager virtualbox-guest-additions ; do
+	for service in avahi-daemon cups connman dkms dm-event redcorelive lightdm lvm2-lvmetad lvm2-monitor NetworkManager ModemManager virtualbox-guest-additions ; do
 		chroot "$isosyncdir" su - "$isouser" -c "systemctl enable "$service""
 	done
 }
