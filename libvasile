@@ -5,9 +5,9 @@ source /lib/gentoo/functions.sh
 
 # generic variables
 
-export local releasename="kogaion"
+export local releasename="redcore"
 export local releasetarget="desktop"
-export local releaseversion="3"
+export local releaseversion="1"
 export local kernelver="4.8.5-"$releasename""
 export local chrootx64=""$releasename"_"$releaseversion"_core_x64.squashfs"
 export local chrootx64md5=""$chrootx64".md5"
@@ -21,7 +21,7 @@ export local overlaydir="overlaydir"
 export local chrootuser="root"
 export local chroottarget="${@:2}"
 export local chrootbuildtarget="emerge -kav "$chroottarget""
-export local chrootdevtree="/usr/share/kvasile/devmodeset"
+export local chrootdevtree="/usr/share/vasile/devmodeset"
 export local chrootmainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
 export local chrootbuildgit="cd /opt && git clone https://gitlab.com/"$releasename"/"$releasename"-build.git"
 
@@ -30,7 +30,7 @@ export local chrootbuildgit="cd /opt && git clone https://gitlab.com/"$releasena
 export local bootcorepath="/tmp/bootcore"
 export local bootcorefiles="/tmp/bootcore/cdroot/boot"
 export local isouser="root"
-export local isousertree="/usr/share/kvasile/usermodeset"
+export local isousertree="/usr/share/vasile/usermodeset"
 export local isomainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
 export local isobuildgit="cd /opt && git clone https://gitlab.com/"$releasename"/"$releasename"-build.git"
 
