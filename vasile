@@ -24,15 +24,19 @@ case $1 in
 		source /usr/share/vasile/makeiso
 		;;
 	--resetmode)
-		source /usr/share/vasile/modereset
+		source /usr/share/vasile/resetmode
 		;;
-	--usermode)
-		source /usr/share/vasile/modereset
-		source /usr/share/vasile/usermodeset
+	--binmode)
+		source /usr/share/vasile/resetmode
+		source /usr/share/vasile/binmode
 		;;
-	--devmode)
-		source /usr/share/vasile/modereset
-		source /usr/share/vasile/devmodeset
+	--mixedmode)
+		source /usr/share/vasile/resetmode
+		source /usr/share/vasile/mixedmode
+		;;
+	--srcmode)
+		source /usr/share/vasile/resetmode
+		source /usr/share/vasile/srcmode
 		;;
 	--help)
 		einfo "Usage: vasile [options]"
@@ -40,9 +44,10 @@ case $1 in
 		einfo "Options:"
 		einfo "--makepkg : build package/target in a clean squashed core"
 		einfo "--makeiso : build iso based on clean squashed core + targets"
-		einfo "--resetmode : reset INSTALLED Redcore Linux system state - You're on your own, you've been warned!"
-		einfo "--usermode : switch INSTALLED Redcore Linux system state to usermode - use binary packages from repositories"
-		einfo "--devmode : switch INSTALLED Redcore Linux system state to devmode (aka Gentoo mode) - use source packages from portage tree"
+		einfo "--resetmode : reset Redcore Linux system state - You're on your own, you've been warned!"
+		einfo "--binmode : switch Redcore Linux system state to binary only mode"
+		einfo "--mixedmode : switch Redcore Linux system state to mixed (binary/source) mode"
+		einfo "--srcmode : switch Redcore Linux system state to source only mode (full Gentoo mode)"
 		einfo "--help : display this help and exit"
 		;;
 	*)

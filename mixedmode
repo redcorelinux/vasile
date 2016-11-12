@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+export local portagedir="/usr/portage"
+export local confdir="/etc/portage"
+export local gitdir="/opt/redcore-build/conf/intel/portage"
+
+fetch_devmode_portage_tree() {
+	if [[ ! -d "$portagedir"/.git ]] ; then
+		cd "$portagedir" && git init > /dev/null 2>&1
+		git remote add origin https://gitlab.com/redcore/portage.git
+		git pull --depth=1 origin master
+		git branch -u origin/master master
+		rm -rf ""$portagedir"/profiles/updates"
+	fi
+}
+
+set_devmode_portage_tree() {
+	ln -sf "$gitdir" "$confdir"
+	ln -sf "$confdir"/make.conf.amd64-mixedmode "$confdir"/make.conf
+	eselect profile set 1
+	env-update
+	. /etc/profile
+}
+
+main() {
+	fetch_devmode_portage_tree
+	set_devmode_portage_tree
+}
+
+main
