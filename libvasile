@@ -21,7 +21,7 @@ export local overlaydir="overlaydir"
 export local chrootuser="root"
 export local chroottarget="${@:2}"
 export local chrootbuildtarget="emerge -kav "$chroottarget""
-export local chrootdevtree="/usr/share/vasile/devmodeset"
+export local chrootdevtree="/usr/share/vasile/srcmode"
 export local chrootmainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
 export local chrootbuildgit="cd /opt && git clone https://gitlab.com/"$releasename"/"$releasename"-build.git"
 
@@ -30,7 +30,7 @@ export local chrootbuildgit="cd /opt && git clone https://gitlab.com/"$releasena
 export local bootcorepath="/tmp/bootcore"
 export local bootcorefiles="/tmp/bootcore/cdroot/boot"
 export local isouser="root"
-export local isousertree="/usr/share/vasile/usermodeset"
+export local isousertree="/usr/share/vasile/binmode"
 export local isomainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
 export local isobuildgit="cd /opt && git clone https://gitlab.com/"$releasename"/"$releasename"-build.git"
 
