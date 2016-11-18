@@ -329,11 +329,13 @@ makeiso () {
 
 removeportagetree() {
 	if [ -d ""$portagedir"/.git" ] ; then
+		einfo "Removing portage tree"
 		find "$portagedir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
 	fi
 }
 
 removeportageconfig() {
+	einfo "Removing "$releasename" buildsystem"
 	rm ""$confdir"/make.conf" > /dev/null 2>&1
 	rm ""$confdir"/make.profile" > /dev/null 2>&1
 	rm "$confdir" > /dev/null 2>&1
