@@ -2,7 +2,7 @@
 
 export local portagedir="/usr/portage"
 export local confdir="/etc/portage"
-export local gitdir="/opt/redcore-build"
+export local clonedir="/opt/redcore-build"
 
 empty_portage_tree() {
 	if [ -d ""$portagedir"/.git" ] ; then
@@ -14,7 +14,7 @@ reset_portage_config() {
 	rm ""$confdir"/make.conf"
 	rm ""$confdir"/make.profile"
 	rm "$confdir"
-	rm -rf "$gitdir"
+	rm -rf "$clonedir"
 }
 
 fetch_portage_config() {
