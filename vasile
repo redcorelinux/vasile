@@ -18,10 +18,10 @@ kernelconfig
 
 case $1 in
 	--makepkg)
-		source /usr/share/vasile/makepkg
+		makepkg
 		;;
 	--makeiso)
-		source /usr/share/vasile/makeiso
+		makeiso
 		;;
 	--resetmode)
 		source /usr/share/vasile/resetmode

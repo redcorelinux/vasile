@@ -97,6 +97,25 @@ chrootchecksum () {
 
 # build functions
 
+chrootprepare () {
+        while : true ; do
+                if [[ ! -d "$rodir" && ! -d "$rwdir" && ! -d "$workdir" && ! -d "$overlaydir" ]] ; then
+                        for i in "$rodir" "$rwdir" "$workdir" "$overlaydir" ; do
+                                mkdir "$i"
+                        done
+                        chrootstart
+                        break
+                elif [[ -d "$rodir" && -d "$rwdir" && -d "$workdir" && -d "$overlaydir" ]] ; then
+                        chrootstop
+                        for i in "$rodir" "$rwdir" "$workdir" "$overlaydir" ; do
+                                rm -rf "$i"
+                        done
+                        continue
+                fi
+        done
+
+}
+
 chrootstop () {
 	umount -l "$overlaydir"/proc > /dev/null 2>&1
 	umount -l "$overlaydir"/sys > /dev/null 2>&1
@@ -153,6 +172,17 @@ chrootx64 () {
 	einfo "TEST USEFLAGS && KEYWORDS && MASKS IF REQUIRED"
 	einfo "IN THE END : DO NOT FORGET TO COMMIT YOUR CHANGES"
 	chroot "$overlaydir" su - "$chrootuser"
+}
+
+makepkg () {
+        chrootchecksum
+        chrootprepare
+        chrootoverlays
+        chrootbuildsystem
+        chrootdevtree
+        chrootbuild
+        chrootx64
+        chrootstop
 }
 
 # iso functions
@@ -218,4 +248,72 @@ isochroot () {
 	einfo "INSTALL APPS & TARGETS & DES YOU WANT INSIDE ISO"
 	einfo "EXIT WHEN YOU'RE DONE AND I'LL CREATE THE IMAGE"
 	chroot "$isosyncdir" su - "$isouser"
+}
+
+prepareiso () {
+        mkdir -p "$isosyncdir"
+        dd if=/dev/zero of=""$isosyncdir".img" bs=50M count=400
+        mkfs.ext4 ""$isosyncdir".img"
+        mkdir -p "$isostagingdir"
+        mkdir -p "$isobootdir"
+        mkdir -p "$isoefibootdir"
+        mkdir -p "$isoliveosdir"
+        mkdir -p "$isosupersquashdir"
+        mkdir -p "$isolivesqfsdir"
+        mount -t squashfs "$chrootx64" "$isostagingdir"
+        mount -t ext4 ""$isosyncdir".img" "$isosyncdir"
+        rsync -aHAXr --progress "$isostagingdir/" "$isosyncdir/"
+        cp -avx ""$isosyncdir"/boot/"$isokernelname"" ""$isorootdir"/boot/vmlinuz"
+        isostart
+        isoramfs
+        isostop
+        mv ""$isosyncdir"/boot/"$isodracutrd"" ""$isorootdir"/boot/initrd"
+        isostart
+        isoefiimg
+        isostop
+        mv ""$isosyncdir"/root/bootx64.efi" "$isoefibootdir"
+        chmod 755 ""$isoefibootdir"/bootx64.efi"
+        isostart
+        isochainload
+        isostop
+        mv ""$isosyncdir"/root/core.img" "$isobootdir"
+        cp -avx ""$isosyncdir"/usr/lib64/grub/i386-pc/lnxboot.img" "$isobootdir"
+        isostart
+        isooverlays
+        isobuildsystem
+        isousertree
+        isochroot
+        isostop
+        isostart
+        isoservices
+        isostop
+        umount -l "$isosyncdir" > /dev/null 2>&1
+        mv ""$isosyncdir".img"  "$isolivesqfsdir"
+        mksquashfs "$isosupersquashdir" ""$isorootdir"/squashfs.img" -b 1048576 -comp xz -Xdict-size 100%
+        mv ""$isorootdir/"squashfs.img" "$isoliveosdir"
+}
+
+bootcoreiso () {
+        git clone https://gitlab.com/"$releasename"/boot-core.git "$bootcorepath"
+        cp -avx "$bootcorefiles" "$isorootdir"
+}
+
+cleanupiso () {
+        umount "$isostagingdir"
+        rm -rf "$isosyncdir"
+        rm -rf "$isostagingdir"
+        rm -rf "$isosupersquashdir"
+        rm -rf "$bootcorepath"
+}
+
+makeisoimg () {
+        grub2-mkrescue -o ""$releasename"-"$releasetarget"-"$releaseversion"-"$isomainarch".iso" "$isorootdir"
+}
+
+makeiso () {
+        chrootchecksum
+        prepareiso
+        bootcoreiso
+        cleanupiso
+        makeisoimg
 }
