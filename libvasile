@@ -21,7 +21,7 @@ export local overlaydir="overlaydir"
 export local chrootuser="root"
 export local chroottarget="${@:2}"
 export local chrootbuildtarget="emerge -kav "$chroottarget""
-export local chrootdevtree="/usr/share/vasile/srcmode"
+export local chrootdevtree="vasile --srcmode"
 export local chrootmainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
 export local chrootbuildgit="cd /opt && git clone https://gitlab.com/"$releasename"/"$releasename"-build.git"
 
@@ -30,7 +30,7 @@ export local chrootbuildgit="cd /opt && git clone https://gitlab.com/"$releasena
 export local bootcorepath="/tmp/bootcore"
 export local bootcorefiles="/tmp/bootcore/cdroot/boot"
 export local isouser="root"
-export local isousertree="/usr/share/vasile/binmode"
+export local isousertree="vasile --binmode"
 export local isomainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
 export local isobuildgit="cd /opt && git clone https://gitlab.com/"$releasename"/"$releasename"-build.git"
 
@@ -105,21 +105,21 @@ chrootchecksum () {
 # build functions
 
 chrootprepare () {
-        while : true ; do
-                if [[ ! -d "$rodir" && ! -d "$rwdir" && ! -d "$workdir" && ! -d "$overlaydir" ]] ; then
-                        for i in "$rodir" "$rwdir" "$workdir" "$overlaydir" ; do
-                                mkdir "$i"
-                        done
-                        chrootstart
-                        break
-                elif [[ -d "$rodir" && -d "$rwdir" && -d "$workdir" && -d "$overlaydir" ]] ; then
-                        chrootstop
-                        for i in "$rodir" "$rwdir" "$workdir" "$overlaydir" ; do
-                                rm -rf "$i"
-                        done
-                        continue
-                fi
-        done
+	while : true ; do
+		if [[ ! -d "$rodir" && ! -d "$rwdir" && ! -d "$workdir" && ! -d "$overlaydir" ]] ; then
+			for i in "$rodir" "$rwdir" "$workdir" "$overlaydir" ; do
+				mkdir "$i"
+			done
+			chrootstart
+			break
+		elif [[ -d "$rodir" && -d "$rwdir" && -d "$workdir" && -d "$overlaydir" ]] ; then
+			chrootstop
+			for i in "$rodir" "$rwdir" "$workdir" "$overlaydir" ; do
+				rm -rf "$i"
+			done
+			continue
+		fi
+	done
 
 }
 
@@ -182,14 +182,14 @@ chrootx64 () {
 }
 
 makepkg () {
-        chrootchecksum
-        chrootprepare
-        chrootoverlays
-        chrootbuildsystem
-        chrootdevtree
-        chrootbuild
-        chrootx64
-        chrootstop
+	chrootchecksum
+	chrootprepare
+	chrootoverlays
+	chrootbuildsystem
+	chrootdevtree
+	chrootbuild
+	chrootx64
+	chrootstop
 }
 
 # iso functions
@@ -258,86 +258,86 @@ isochroot () {
 }
 
 prepareiso () {
-        mkdir -p "$isosyncdir"
-        dd if=/dev/zero of=""$isosyncdir".img" bs=50M count=400
-        mkfs.ext4 ""$isosyncdir".img"
-        mkdir -p "$isostagingdir"
-        mkdir -p "$isobootdir"
-        mkdir -p "$isoefibootdir"
-        mkdir -p "$isoliveosdir"
-        mkdir -p "$isosupersquashdir"
-        mkdir -p "$isolivesqfsdir"
-        mount -t squashfs "$chrootx64" "$isostagingdir"
-        mount -t ext4 ""$isosyncdir".img" "$isosyncdir"
-        rsync -aHAXr --progress "$isostagingdir/" "$isosyncdir/"
-        cp -avx ""$isosyncdir"/boot/"$isokernelname"" ""$isorootdir"/boot/vmlinuz"
-        isostart
-        isoramfs
-        isostop
-        mv ""$isosyncdir"/boot/"$isodracutrd"" ""$isorootdir"/boot/initrd"
-        isostart
-        isoefiimg
-        isostop
-        mv ""$isosyncdir"/root/bootx64.efi" "$isoefibootdir"
-        chmod 755 ""$isoefibootdir"/bootx64.efi"
-        isostart
-        isochainload
-        isostop
-        mv ""$isosyncdir"/root/core.img" "$isobootdir"
-        cp -avx ""$isosyncdir"/usr/lib64/grub/i386-pc/lnxboot.img" "$isobootdir"
-        isostart
-        isooverlays
-        isobuildsystem
-        isousertree
-        isochroot
-        isostop
-        isostart
-        isoservices
-        isostop
-        umount -l "$isosyncdir" > /dev/null 2>&1
-        mv ""$isosyncdir".img"  "$isolivesqfsdir"
-        mksquashfs "$isosupersquashdir" ""$isorootdir"/squashfs.img" -b 1048576 -comp xz -Xdict-size 100%
-        mv ""$isorootdir/"squashfs.img" "$isoliveosdir"
+	mkdir -p "$isosyncdir"
+	dd if=/dev/zero of=""$isosyncdir".img" bs=50M count=400
+	mkfs.ext4 ""$isosyncdir".img"
+	mkdir -p "$isostagingdir"
+	mkdir -p "$isobootdir"
+	mkdir -p "$isoefibootdir"
+	mkdir -p "$isoliveosdir"
+	mkdir -p "$isosupersquashdir"
+	mkdir -p "$isolivesqfsdir"
+	mount -t squashfs "$chrootx64" "$isostagingdir"
+	mount -t ext4 ""$isosyncdir".img" "$isosyncdir"
+	rsync -aHAXr --progress "$isostagingdir/" "$isosyncdir/"
+	cp -avx ""$isosyncdir"/boot/"$isokernelname"" ""$isorootdir"/boot/vmlinuz"
+	isostart
+	isoramfs
+	isostop
+	mv ""$isosyncdir"/boot/"$isodracutrd"" ""$isorootdir"/boot/initrd"
+	isostart
+	isoefiimg
+	isostop
+	mv ""$isosyncdir"/root/bootx64.efi" "$isoefibootdir"
+	chmod 755 ""$isoefibootdir"/bootx64.efi"
+	isostart
+	isochainload
+	isostop
+	mv ""$isosyncdir"/root/core.img" "$isobootdir"
+	cp -avx ""$isosyncdir"/usr/lib64/grub/i386-pc/lnxboot.img" "$isobootdir"
+	isostart
+	isooverlays
+	isobuildsystem
+	isousertree
+	isochroot
+	isostop
+	isostart
+	isoservices
+	isostop
+	umount -l "$isosyncdir" > /dev/null 2>&1
+	mv ""$isosyncdir".img"  "$isolivesqfsdir"
+	mksquashfs "$isosupersquashdir" ""$isorootdir"/squashfs.img" -b 1048576 -comp xz -Xdict-size 100%
+	mv ""$isorootdir/"squashfs.img" "$isoliveosdir"
 }
 
 bootcoreiso () {
-        git clone https://gitlab.com/"$releasename"/boot-core.git "$bootcorepath"
-        cp -avx "$bootcorefiles" "$isorootdir"
+	git clone https://gitlab.com/"$releasename"/boot-core.git "$bootcorepath"
+	cp -avx "$bootcorefiles" "$isorootdir"
 }
 
 cleanupiso () {
-        umount "$isostagingdir"
-        rm -rf "$isosyncdir"
-        rm -rf "$isostagingdir"
-        rm -rf "$isosupersquashdir"
-        rm -rf "$bootcorepath"
+	umount "$isostagingdir"
+	rm -rf "$isosyncdir"
+	rm -rf "$isostagingdir"
+	rm -rf "$isosupersquashdir"
+	rm -rf "$bootcorepath"
 }
 
 makeisoimg () {
-        grub2-mkrescue -o ""$releasename"-"$releasetarget"-"$releaseversion"-"$isomainarch".iso" "$isorootdir"
+	grub2-mkrescue -o ""$releasename"-"$releasetarget"-"$releaseversion"-"$isomainarch".iso" "$isorootdir"
 }
 
 makeiso () {
-        chrootchecksum
-        prepareiso
-        bootcoreiso
-        cleanupiso
-        makeisoimg
+	chrootchecksum
+	prepareiso
+	bootcoreiso
+	cleanupiso
+	makeisoimg
 }
 
 # modechange functions
 
 removeportagetree() {
-        if [ -d ""$portagedir"/.git" ] ; then
-                find "$portagedir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
-        fi
+	if [ -d ""$portagedir"/.git" ] ; then
+		find "$portagedir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
+	fi
 }
 
 removeportageconfig() {
-        rm ""$confdir"/make.conf" > /dev/null 2>&1
-        rm ""$confdir"/make.profile" > /dev/null 2>&1
-        rm "$confdir" > /dev/null 2>&1
-        rm -rf "$clonedir" > /dev/null 2>&1
+	rm ""$confdir"/make.conf" > /dev/null 2>&1
+	rm ""$confdir"/make.profile" > /dev/null 2>&1
+	rm "$confdir" > /dev/null 2>&1
+	rm -rf "$clonedir" > /dev/null 2>&1
 }
 
 resetmode () {
@@ -346,8 +346,77 @@ resetmode () {
 }
 
 fetchportageconfig() {
-        pushd /opt > /dev/null 2>&1
-        git clone https://gitlab.com/redcore/redcore-build.git > /dev/null 2>&1
-        popd > /dev/null 2>&1
+	pushd /opt > /dev/null 2>&1
+	git clone https://gitlab.com/redcore/redcore-build.git
+	popd > /dev/null 2>&1
 }
 
+fetchfullportagetree() {
+	if [[ ! -d "$portagedir"/.git ]] ; then
+		cd "$portagedir" && git init > /dev/null 2>&1
+		git remote add origin https://gitlab.com/redcore/portage.git
+		git pull --depth=1 origin master
+		git branch -u origin/master master
+		rm -rf ""$portagedir"/profiles/updates"
+	fi
+}
+
+fetchminimalportagetree() {
+	if [[ ! -d "$portagedir"/.git ]] ; then
+		cd "$portagedir" && git init > /dev/null 2>&1
+		git remote add origin https://gitlab.com/redcore/portage.git
+		git config core.sparsecheckout true
+		echo "profiles/*" >> .git/info/sparse-checkout
+		echo "metadata/*" >> .git/info/sparse-checkout
+		echo "eclass/*" >> .git/info/sparse-checkout
+		echo ".gitignore" >> .git/info/sparse-checkout
+		git pull --depth=1 origin master
+		git branch -u origin/master master
+		rm -rf ""$portagedir"/profiles/updates"
+	fi
+}
+
+setbinmodeconfig() {
+	ln -sf "$gitdir" "$confdir"
+	ln -sf "$confdir"/make.conf.amd64-binmode "$confdir"/make.conf
+	eselect profile set 1
+	env-update
+	. /etc/profile
+}
+
+setmixedmodeconfig() {
+	ln -sf "$gitdir" "$confdir"
+	ln -sf "$confdir"/make.conf.amd64-mixedmode "$confdir"/make.conf
+	eselect profile set 1
+	env-update
+	. /etc/profile
+}
+
+setsrcmodeconfig () {
+	ln -sf "$gitdir" "$confdir"
+	ln -sf "$confdir"/make.conf.amd64-srcmode "$confdir"/make.conf
+	eselect profile set 1
+	env-update
+	. /etc/profile
+}
+
+binmode() {
+	resetmode
+	fetchportageconfig
+	fetchminimalportagetree
+	setbinmodeconfig
+}
+
+mixedmode() {
+	resetmode
+	ferchportageconfig
+	fetchfullportagetree
+	setmixedconfig
+}
+
+srcmode() {
+	resetmode
+	fetchportageconfig
+	fetchfullportagetree
+	setsrcmodeconfig
+}

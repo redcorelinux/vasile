@@ -27,16 +27,13 @@ case $1 in
 		resetmode
 		;;
 	--binmode)
-		source /usr/share/vasile/resetmode
-		source /usr/share/vasile/binmode
+		binmode
 		;;
 	--mixedmode)
-		source /usr/share/vasile/resetmode
-		source /usr/share/vasile/mixedmode
+		mixedmode
 		;;
 	--srcmode)
-		source /usr/share/vasile/resetmode
-		source /usr/share/vasile/srcmode
+		srcmode
 		;;
 	--help)
 		einfo "Usage: vasile [options]"
