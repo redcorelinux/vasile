@@ -49,6 +49,13 @@ export local isosyncdir=""$isorootdir"/rootfs"
 export local isobootdir=""$isorootdir"/boot/grub"
 export local isoefibootdir=""$isorootdir"/efi/boot"
 
+# modechange variables
+
+export local portagedir="/usr/portage"
+export local confdir="/etc/portage"
+export local gitdir="/opt/redcore-build/conf/intel/portage"
+export local clonedir="/opt/redcore-build"
+
 # generic functions (used for both build && iso creation)
 
 kernelconfig () {

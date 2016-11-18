@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-export local portagedir="/usr/portage"
-export local confdir="/etc/portage"
-export local clonedir="/opt/redcore-build"
-
 empty_portage_tree() {
 	if [ -d ""$portagedir"/.git" ] ; then
 		find "$portagedir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1

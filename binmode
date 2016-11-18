@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-export local portagedir="/usr/portage"
-export local confdir="/etc/portage"
-export local gitdir="/opt/redcore-build/conf/intel/portage"
-
 fetch_usermode_portage_tree() {
 	if [[ ! -d "$portagedir"/.git ]] ; then
 		cd "$portagedir" && git init > /dev/null 2>&1
