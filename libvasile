@@ -22,7 +22,6 @@ export local chrootuser="root"
 export local chroottarget="${@:2}"
 export local chrootbuildtarget="emerge -kav "$chroottarget""
 export local chrootdevtree="vasile --srcmode"
-export local chrootmainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
 
 # iso variables
 
@@ -30,7 +29,6 @@ export local bootcorepath="/tmp/bootcore"
 export local bootcorefiles="/tmp/bootcore/cdroot/boot"
 export local isouser="root"
 export local isousertree="vasile --binmode"
-export local isomainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
 export local isodracutcmd="dracut -N -a dmsquash-live -a pollcdrom -o systemd -o systemd-initrd -o systemd-networkd -o dracut-systemd --force --kver "$kernelver""
 export local isodracutrd="initramfs-"$kernelver".img"
 export local isoeficmd="grub2-mkimage -d /usr/lib64/grub/x86_64-efi -o bootx64.efi -O x86_64-efi ext2 fat udf btrfs ntfs reiserfs xfs hfsplus lvm ata part_msdos part_gpt part_apple bsd search_fs_uuid normal chain iso9660 configfile help loadenv reboot cat search memdisk tar boot linux chain"
@@ -147,15 +145,7 @@ chrootstart () {
 }
 
 chrootdevtree () {
-	einfo "Injecting srcmode (full) portage tree"
-	sleep 1
 	chroot "$overlaydir" su - "$chrootuser" -c "$chrootdevtree"
-}
-
-chrootoverlays () {
-	einfo "Injecting "$releasename" "$releasetarget" overlay"
-	sleep 1
-	chroot "$overlaydir" su - "$chrootuser" -c "$chrootmainoverlay"
 }
 
 chrootbuild () {
@@ -175,7 +165,6 @@ chrootx64 () {
 makepkg () {
 	chrootchecksum
 	chrootprepare
-	chrootoverlays
 	chrootdevtree
 	chrootbuild
 	chrootx64
@@ -205,15 +194,7 @@ isostop () {
 }
 
 isousertree () {
-	einfo "Injecting binmode (minimal) portage tree"
-	sleep 1
 	chroot "$isosyncdir" su - "$isouser" -c "$isousertree"
-}
-
-isooverlays () {
-	einfo "Injecting "$releasename" "$releasetarget" overlay"
-	sleep 1
-	chroot "$isosyncdir" su - "$isouser" -c "$isomainoverlay"
 }
 
 isoramfs () {
@@ -270,7 +251,6 @@ prepareiso () {
 	mv ""$isosyncdir"/root/core.img" "$isobootdir"
 	cp -avx ""$isosyncdir"/usr/lib64/grub/i386-pc/lnxboot.img" "$isobootdir"
 	isostart
-	isooverlays
 	isousertree
 	isochroot
 	isostop
@@ -317,6 +297,11 @@ removeportagetree() {
 	fi
 }
 
+removeoverlays() {
+	einfo "Removing "$releasename"-"$releasetarget" overlay"
+	layman -d "$releasename"-"$releasetarget"
+}
+
 removeportageconfig() {
 	einfo "Removing "$releasename" buildsystem"
 	rm ""$confdir"/make.conf" > /dev/null 2>&1
@@ -327,6 +312,7 @@ removeportageconfig() {
 
 resetmode () {
 	removeportagetree
+	removeoverlays
 	removeportageconfig
 }
 
@@ -364,6 +350,11 @@ fetchminimalportagetree() {
 	fi
 }
 
+fetchoverlays () {
+	einfo "Injecting "$releasename"-"$releasetarget" overlay"
+	layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml
+}
+
 setbinmodeconfig() {
 	ln -sf "$gitdir" "$confdir"
 	ln -sf "$confdir"/make.conf.amd64-binmode "$confdir"/make.conf
@@ -390,6 +381,7 @@ setsrcmodeconfig () {
 
 binmode() {
 	resetmode
+	fetchoverlays
 	fetchportageconfig
 	fetchminimalportagetree
 	setbinmodeconfig
@@ -397,6 +389,7 @@ binmode() {
 
 mixedmode() {
 	resetmode
+	fetchoverlays
 	fetchportageconfig
 	fetchfullportagetree
 	setmixedconfig
@@ -404,6 +397,7 @@ mixedmode() {
 
 srcmode() {
 	resetmode
+	fetchoverlays
 	fetchportageconfig
 	fetchfullportagetree
 	setsrcmodeconfig
