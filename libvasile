@@ -324,3 +324,30 @@ makeiso () {
         cleanupiso
         makeisoimg
 }
+
+# modechange functions
+
+removeportagetree() {
+        if [ -d ""$portagedir"/.git" ] ; then
+                find "$portagedir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
+        fi
+}
+
+removeportageconfig() {
+        rm ""$confdir"/make.conf" > /dev/null 2>&1
+        rm ""$confdir"/make.profile" > /dev/null 2>&1
+        rm "$confdir" > /dev/null 2>&1
+        rm -rf "$clonedir" > /dev/null 2>&1
+}
+
+resetmode () {
+	removeportagetree
+	removeportageconfig
+}
+
+fetchportageconfig() {
+        pushd /opt > /dev/null 2>&1
+        git clone https://gitlab.com/redcore/redcore-build.git > /dev/null 2>&1
+        popd > /dev/null 2>&1
+}
+

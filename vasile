@@ -24,7 +24,7 @@ case $1 in
 		makeiso
 		;;
 	--resetmode)
-		source /usr/share/vasile/resetmode
+		resetmode
 		;;
 	--binmode)
 		source /usr/share/vasile/resetmode
