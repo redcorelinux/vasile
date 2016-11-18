@@ -401,21 +401,18 @@ setsrcmodeconfig () {
 }
 
 binmode() {
-	resetmode
 	fetchportageconfig
 	fetchminimalportagetree
 	setbinmodeconfig
 }
 
 mixedmode() {
-	resetmode
 	fetchportageconfig
 	fetchfullportagetree
 	setmixedconfig
 }
 
 srcmode() {
-	resetmode
 	fetchportageconfig
 	fetchfullportagetree
 	setsrcmodeconfig
