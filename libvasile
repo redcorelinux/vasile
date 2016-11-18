@@ -299,7 +299,7 @@ removeportagetree() {
 
 removeoverlays() {
 	einfo "Removing "$releasename"-"$releasetarget" overlay"
-	layman -d "$releasename"-"$releasetarget"
+	layman -d "$releasename"-"$releasetarget" > /dev/null 2>&1
 }
 
 removeportageconfig() {
