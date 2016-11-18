@@ -27,15 +27,12 @@ case $1 in
 		resetmode
 		;;
 	--binmode)
-		resetmode
 		binmode
 		;;
 	--mixedmode)
-		resetmode
 		mixedmode
 		;;
 	--srcmode)
-		resetmode
 		srcmode
 		;;
 	--help)

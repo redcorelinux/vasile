@@ -23,7 +23,6 @@ export local chroottarget="${@:2}"
 export local chrootbuildtarget="emerge -kav "$chroottarget""
 export local chrootdevtree="vasile --srcmode"
 export local chrootmainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
-export local chrootbuildgit="cd /opt && git clone https://gitlab.com/"$releasename"/"$releasename"-build.git"
 
 # iso variables
 
@@ -32,8 +31,6 @@ export local bootcorefiles="/tmp/bootcore/cdroot/boot"
 export local isouser="root"
 export local isousertree="vasile --binmode"
 export local isomainoverlay="layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml"
-export local isobuildgit="cd /opt && git clone https://gitlab.com/"$releasename"/"$releasename"-build.git"
-
 export local isodracutcmd="dracut -N -a dmsquash-live -a pollcdrom -o systemd -o systemd-initrd -o systemd-networkd -o dracut-systemd --force --kver "$kernelver""
 export local isodracutrd="initramfs-"$kernelver".img"
 export local isoeficmd="grub2-mkimage -d /usr/lib64/grub/x86_64-efi -o bootx64.efi -O x86_64-efi ext2 fat udf btrfs ntfs reiserfs xfs hfsplus lvm ata part_msdos part_gpt part_apple bsd search_fs_uuid normal chain iso9660 configfile help loadenv reboot cat search memdisk tar boot linux chain"
@@ -161,12 +158,6 @@ chrootoverlays () {
 	chroot "$overlaydir" su - "$chrootuser" -c "$chrootmainoverlay"
 }
 
-chrootbuildsystem () {
-	einfo "Injecting "$releasename" buildsystem"
-	sleep 1
-	chroot "$overlaydir" su - "$chrootuser" -c "$chrootbuildgit"
-}
-
 chrootbuild () {
 	einfo "All systems are go!"
 	sleep 1
@@ -185,7 +176,6 @@ makepkg () {
 	chrootchecksum
 	chrootprepare
 	chrootoverlays
-	chrootbuildsystem
 	chrootdevtree
 	chrootbuild
 	chrootx64
@@ -224,12 +214,6 @@ isooverlays () {
 	einfo "Injecting "$releasename" "$releasetarget" overlay"
 	sleep 1
 	chroot "$isosyncdir" su - "$isouser" -c "$isomainoverlay"
-}
-
-isobuildsystem () {
-	einfo "Injecting "$releasename" buildsystem"
-	sleep 1
-	chroot "$isosyncdir" su - "$isouser" -c "$isobuildgit"
 }
 
 isoramfs () {
@@ -287,7 +271,6 @@ prepareiso () {
 	cp -avx ""$isosyncdir"/usr/lib64/grub/i386-pc/lnxboot.img" "$isobootdir"
 	isostart
 	isooverlays
-	isobuildsystem
 	isousertree
 	isochroot
 	isostop
@@ -406,18 +389,21 @@ setsrcmodeconfig () {
 }
 
 binmode() {
+	resetmode
 	fetchportageconfig
 	fetchminimalportagetree
 	setbinmodeconfig
 }
 
 mixedmode() {
+	resetmode
 	fetchportageconfig
 	fetchfullportagetree
 	setmixedconfig
 }
 
 srcmode() {
+	resetmode
 	fetchportageconfig
 	fetchfullportagetree
 	setsrcmodeconfig
