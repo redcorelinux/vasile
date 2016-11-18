@@ -409,7 +409,7 @@ binmode() {
 
 mixedmode() {
 	resetmode
-	ferchportageconfig
+	fetchportageconfig
 	fetchfullportagetree
 	setmixedconfig
 }
