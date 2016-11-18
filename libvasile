@@ -292,7 +292,7 @@ makeiso () {
 
 removeportagetree() {
 	if [ -d ""$portagedir"/.git" ] ; then
-		einfo "Removing portage tree"
+		einfo "Removing gentoo portage tree"
 		find "$portagedir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
 	fi
 }
@@ -303,7 +303,7 @@ removeoverlays() {
 }
 
 removeportageconfig() {
-	einfo "Removing "$releasename" buildsystem"
+	einfo "Removing "$releasename"-"$releasetarget" buildsystem"
 	rm ""$confdir"/make.conf" > /dev/null 2>&1
 	rm ""$confdir"/make.profile" > /dev/null 2>&1
 	rm "$confdir" > /dev/null 2>&1
@@ -318,14 +318,14 @@ resetmode () {
 
 fetchportageconfig() {
 	pushd /opt > /dev/null 2>&1
-	einfo "Injecting "$releasename" buildsystem"
+	einfo "Injecting "$releasename"-"$releasetarget" buildsystem"
 	git clone https://gitlab.com/redcore/redcore-build.git
 	popd > /dev/null 2>&1
 }
 
 fetchfullportagetree() {
 	if [[ ! -d "$portagedir"/.git ]] ; then
-		einfo "Injecting mixedmode/srcmode (full) portage tree"
+		einfo "Injecting mixedmode/srcmode (full) gentoo portage tree"
 		cd "$portagedir" && git init > /dev/null 2>&1
 		git remote add origin https://gitlab.com/redcore/portage.git
 		git pull --depth=1 origin master
@@ -336,7 +336,7 @@ fetchfullportagetree() {
 
 fetchminimalportagetree() {
 	if [[ ! -d "$portagedir"/.git ]] ; then
-		einfo "Injecting binmode (minimal) portage tree"
+		einfo "Injecting binmode (minimal) gentoo portage tree"
 		cd "$portagedir" && git init > /dev/null 2>&1
 		git remote add origin https://gitlab.com/redcore/portage.git
 		git config core.sparsecheckout true
@@ -381,24 +381,24 @@ setsrcmodeconfig () {
 
 binmode() {
 	resetmode
+	fetchminimalportagetree
 	fetchoverlays
 	fetchportageconfig
-	fetchminimalportagetree
 	setbinmodeconfig
 }
 
 mixedmode() {
 	resetmode
+	fetchfullportagetree
 	fetchoverlays
 	fetchportageconfig
-	fetchfullportagetree
 	setmixedconfig
 }
 
 srcmode() {
 	resetmode
+	fetchfullportagetree
 	fetchoverlays
 	fetchportageconfig
-	fetchfullportagetree
 	setsrcmodeconfig
 }
