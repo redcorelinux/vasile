@@ -11,7 +11,6 @@ source /usr/lib/vasile/libvasile
 # Vasile need root privileges and a proper kernel to run
 # Also, running it in live mode is a really bad idea
 
-checkroot
 checkiflive
 kernelconfig
 
@@ -36,16 +35,7 @@ case $1 in
 		srcmode
 		;;
 	--help)
-		einfo "Usage: vasile [options]"
-		einfo ""
-		einfo "Options:"
-		einfo "--makepkg : build package/target in a clean squashed core"
-		einfo "--makeiso : build iso based on clean squashed core + targets"
-		einfo "--resetmode : reset Redcore Linux system state - You're on your own, you've been warned!"
-		einfo "--binmode : switch Redcore Linux system state to binary only mode"
-		einfo "--mixedmode : switch Redcore Linux system state to mixed (binary/source) mode"
-		einfo "--srcmode : switch Redcore Linux system state to source only mode (full Gentoo mode)"
-		einfo "--help : display this help and exit"
+		showhelp
 		;;
 	*)
 		eerror "error: no operation specified, use --help for help"
