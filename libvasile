@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # import gentoo functions
+
 source /lib/gentoo/functions.sh
 
 # generic variables
@@ -8,41 +9,53 @@ source /lib/gentoo/functions.sh
 export local releasename="redcore"
 export local releasetarget="desktop"
 export local releaseversion="1"
+
+# kernel version && name from inside core squashfs
+
 export local kernelver="4.8.5-"$releasename""
+
+# core squahfs name and md5 checksum file
+
 export local chrootx64=""$releasename"_"$releaseversion"_core_x64.squashfs"
 export local chrootx64md5=""$chrootx64".md5"
 
-# build variables
+# overlay mount variables
 
 export local rodir="rodir"
 export local rwdir="rwdir"
 export local workdir="workdir" # only needed for overlayfs on kernel greather than 3.18
 export local overlaydir="overlaydir"
+
+# build variables and commands to run inside core squashfs when building packages
+
 export local chrootuser="root"
 export local chroottarget="${@:2}"
 export local chrootbuildtarget="emerge -kav "$chroottarget""
-export local chrootdevtree="vasile --srcmode"
+export local chrootsrcmode="vasile --srcmode"
 
-# iso variables
+# iso variables and commands to run inside core squahfs when making iso image
 
-export local bootcorepath="/tmp/bootcore"
-export local bootcorefiles="/tmp/bootcore/cdroot/boot"
 export local isouser="root"
-export local isousertree="vasile --binmode"
-export local isodracutcmd="dracut -N -a dmsquash-live -a pollcdrom -o systemd -o systemd-initrd -o systemd-networkd -o dracut-systemd --force --kver "$kernelver""
-export local isodracutrd="initramfs-"$kernelver".img"
+export local isomainarch="x86_64"
+export local isobinmode="vasile --binmode"
+export local isokernelname="kernel-genkernel-"$isomainarch"-"$kernelver""
+export local isoramfscmd="dracut -N -a dmsquash-live -a pollcdrom -o systemd -o systemd-initrd -o systemd-networkd -o dracut-systemd --force --kver "$kernelver""
+export local isoramfsname="initramfs-"$kernelver".img"
 export local isoeficmd="grub2-mkimage -d /usr/lib64/grub/x86_64-efi -o bootx64.efi -O x86_64-efi ext2 fat udf btrfs ntfs reiserfs xfs hfsplus lvm ata part_msdos part_gpt part_apple bsd search_fs_uuid normal chain iso9660 configfile help loadenv reboot cat search memdisk tar boot linux chain"
 export local isochainloadcmd="grub2-mkimage -d /usr/lib64/grub/i386-pc -o core.img -O i386-pc biosdisk part_msdos fat"
-export local isomainarch="x86_64"
+
+# iso image layout variables
+
+export local bootloaderfetchpath="/tmp/bootcore"
+export local bootloaderconfigs=""$bootloaderfetchpath"/cdroot/boot"
 export local isorootdir=""$releasename"-"$releasetarget"-"$releaseversion"-"$isomainarch""
-export local isokernelname="kernel-genkernel-"$isomainarch"-"$kernelver""
-export local isostagingdir="/tmp/"$isorootdir""
-export local isosupersquashdir=""$isorootdir"/CDroot"
-export local isolivesqfsdir=""$isosupersquashdir"/LiveOS"
-export local isoliveosdir=""$isorootdir"/LiveOS"
-export local isosyncdir=""$isorootdir"/rootfs"
-export local isobootdir=""$isorootdir"/boot/grub"
-export local isoefibootdir=""$isorootdir"/efi/boot"
+export local isogrubdir=""$isorootdir"/boot/grub"
+export local isoefidir=""$isorootdir"/efi/boot"
+export local isorsynctarget=""$isorootdir"/rootfs"
+export local isorsyncsource="/tmp/"$isorootdir""
+export local isocdrootdir=""$isorootdir"/CDroot"
+export local isorealfsdir=""$isocdrootdir"/LiveOS"
+export local isosquashfsdir=""$isorootdir"/LiveOS"
 
 # modechange variables
 
@@ -54,6 +67,7 @@ export local clonedir="/opt/redcore-build"
 # generic functions (used for both build && iso creation)
 
 kernelconfig () {
+	# check if the host kernel has needed modules for vasile to work properly...fail to start if it doesn't
 	if [[ $(zgrep 'CONFIG_OVERLAY_FS=' /proc/config.gz) && $(zgrep "CONFIG_SQUASHFS=" /proc/config.gz) &&  $(zgrep "CONFIG_BLK_DEV_LOOP=" /proc/config.gz) ]] ; then
 		einfo "Kernel configuration seems OK, moving on"
 		sleep 1
@@ -65,6 +79,7 @@ kernelconfig () {
 }
 
 checkroot () {
+	# check for root privileges, needed for mount && chroot...fail to start if not root
 	if [[ "$(whoami)" != root ]] ; then
 		eerror "You're not root?...No cookies for you, go away !!!"
 		exit 1
@@ -72,6 +87,7 @@ checkroot () {
 }
 
 checkiflive () {
+	# check if running in live mode...fail to start if so
 	if [[ -L /dev/mapper/live-base ]] ; then
 		eerror "Running in Live mode is unsupported"
 		exit 1
@@ -79,6 +95,8 @@ checkiflive () {
 }
 
 chrootchecksum () {
+	# check if core squashfs and md5 checksum file exists, verify core squashfs integrity against md5 checksum file
+	# fail to start if core squashfs or md5 checksum file doesn't exist, or if core squashfs fails md5 verification
 	while : true ; do
 		if [[ -f "$chrootx64" && -f "$chrootx64md5" ]] ; then
 			einfo "Squashed chroot && Checksum file found"
@@ -100,6 +118,7 @@ chrootchecksum () {
 # build functions
 
 chrootprepare () {
+	# always start from fresh overlay mount path, if previous exists, remove it and start over
 	while : true ; do
 		if [[ ! -d "$rodir" && ! -d "$rwdir" && ! -d "$workdir" && ! -d "$overlaydir" ]] ; then
 			for i in "$rodir" "$rwdir" "$workdir" "$overlaydir" ; do
@@ -119,6 +138,7 @@ chrootprepare () {
 }
 
 chrootstop () {
+	# umount core squashfs overlay mount
 	umount -l "$overlaydir"/proc > /dev/null 2>&1
 	umount -l "$overlaydir"/sys > /dev/null 2>&1
 	umount -l "$overlaydir"/dev/pts > /dev/null 2>&1
@@ -132,6 +152,7 @@ chrootstop () {
 }
 
 chrootstart () {
+	# mount core squashfs in overlay
 	mount -t squashfs "$chrootx64" "$rodir"
 	mount -t overlay -o lowerdir="$rodir",upperdir="$rwdir",workdir="$workdir" overlay "$overlaydir"
 	mount -o bind packages "$overlaydir"/usr/portage/packages
@@ -145,16 +166,19 @@ chrootstart () {
 }
 
 chrootdevtree () {
-	chroot "$overlaydir" su - "$chrootuser" -c "$chrootdevtree"
+	# inject portage tree, redcore overlay && redcore buildsystem (portage config)
+	chroot "$overlaydir" su - "$chrootuser" -c "$chrootsrcmode"
 }
 
 chrootbuild () {
+	# build and install package(s) given as argument...if is already built, install it
 	einfo "All systems are go!"
 	sleep 1
 	chroot "$overlaydir" su - "$chrootuser" -c "$chrootbuildtarget"
 }
 
 chrootx64 () {
+	# land into a chroot env into overlay mounted core squashfs and make build adjustments, if needed
 	einfo "DROPPING YOU TO A ROOT SHELL INTO BUILD ENVIRONMENT"
 	einfo "FIX FAILURES && ADJUST PORTAGE CONFIGURATION FILES"
 	einfo "TEST USEFLAGS && KEYWORDS && MASKS IF REQUIRED"
@@ -174,82 +198,97 @@ makepkg () {
 # iso functions
 
 isostart () {
-	mount -o bind packages "$isosyncdir"/usr/portage/packages
-	mount -t proc proc "$isosyncdir"/proc
-	mount -t sysfs sysfs "$isosyncdir"/sys
-	mount -t devtmpfs -o relatime,size=3055348k,nr_inodes=763837,mode=755 none "$isosyncdir"/dev
-	mount -t devpts -o nosuid,noexec,relatime,gid=5,mode=620 none "$isosyncdir"/dev/pts
-	mount -t tmpfs -o nosuid,nodev none "$isosyncdir"/dev/shm
-	mount -t tmpfs -o nosuid,nodev,noexec none  "$isosyncdir"/tmp
+	# mount iso image core
+	mount -o bind packages "$isorsynctarget"/usr/portage/packages
+	mount -t proc proc "$isorsynctarget"/proc
+	mount -t sysfs sysfs "$isorsynctarget"/sys
+	mount -t devtmpfs -o relatime,size=3055348k,nr_inodes=763837,mode=755 none "$isorsynctarget"/dev
+	mount -t devpts -o nosuid,noexec,relatime,gid=5,mode=620 none "$isorsynctarget"/dev/pts
+	mount -t tmpfs -o nosuid,nodev none "$isorsynctarget"/dev/shm
+	mount -t tmpfs -o nosuid,nodev,noexec none  "$isorsynctarget"/tmp
 }
 
 isostop () {
-	umount -l "$isosyncdir"/proc > /dev/null 2>&1
-	umount -l "$isosyncdir"/sys > /dev/null 2>&1
-	umount -l "$isosyncdir"/dev/pts > /dev/null 2>&1
-	umount -l "$isosyncdir"/dev/shm > /dev/null 2>&1
-	umount -l "$isosyncdir"/dev > /dev/null 2>&1
-	umount -l "$isosyncdir"/tmp > /dev/null 2>&1
-	umount -l "$isosyncdir"/usr/portage/packages > /dev/null 2>&1
+	# umount iso image core
+	umount -l "$isorsynctarget"/proc > /dev/null 2>&1
+	umount -l "$isorsynctarget"/sys > /dev/null 2>&1
+	umount -l "$isorsynctarget"/dev/pts > /dev/null 2>&1
+	umount -l "$isorsynctarget"/dev/shm > /dev/null 2>&1
+	umount -l "$isorsynctarget"/dev > /dev/null 2>&1
+	umount -l "$isorsynctarget"/tmp > /dev/null 2>&1
+	umount -l "$isorsynctarget"/usr/portage/packages > /dev/null 2>&1
 }
 
 isousertree () {
-	chroot "$isosyncdir" su - "$isouser" -c "$isousertree"
+	# inject portage tree, redcore overlay && redcore buildsystem (portage config)
+	chroot "$isorsynctarget" su - "$isouser" -c "$isobinmode"
 }
 
 isoramfs () {
-	chroot "$isosyncdir" su - "$isouser" -c "$isodracutcmd"
+	# generate iso initramfs with required modules for live boot
+	chroot "$isorsynctarget" su - "$isouser" -c "$isoramfscmd"
 }
 
 isoefiimg () {
-	chroot "$isosyncdir" su - "$isouser" -c "$isoeficmd"
+	# generate efi bootloader
+	chroot "$isorsynctarget" su - "$isouser" -c "$isoeficmd"
 }
 
-isochainload () {
-	chroot "$isosyncdir" su - "$isouser" -c "$isochainloadcmd"
+isochainloader () {
+	# generate syslinux -> grub chainloader for unetbootin compatibility
+	chroot "$isorsynctarget" su - "$isouser" -c "$isochainloadcmd"
 }
 
 isoservices () {
+	# enable live iso image system services
 	for service in avahi-daemon cups connman dkms dm-event redcorelive lightdm lvm2-lvmetad lvm2-monitor NetworkManager ModemManager virtualbox-guest-additions ; do
-		chroot "$isosyncdir" su - "$isouser" -c "systemctl enable "$service""
+		chroot "$isorsynctarget" su - "$isouser" -c "systemctl enable "$service""
 	done
 }
 
 isochroot () {
+	# land into a chroot env into iso image core and make adjustments, if needed
 	einfo "DROPPING YOU TO A ROOT SHELL INTO ISO ENVIRONMENT"
 	einfo "INSTALL APPS & TARGETS & DES YOU WANT INSIDE ISO"
 	einfo "EXIT WHEN YOU'RE DONE AND I'LL CREATE THE IMAGE"
-	chroot "$isosyncdir" su - "$isouser"
+	chroot "$isorsynctarget" su - "$isouser"
 }
 
 prepareiso () {
-	mkdir -p "$isosyncdir"
-	dd if=/dev/zero of=""$isosyncdir".img" bs=50M count=400
-	mkfs.ext4 ""$isosyncdir".img"
-	mkdir -p "$isostagingdir"
-	mkdir -p "$isobootdir"
-	mkdir -p "$isoefibootdir"
-	mkdir -p "$isoliveosdir"
-	mkdir -p "$isosupersquashdir"
-	mkdir -p "$isolivesqfsdir"
-	mount -t squashfs "$chrootx64" "$isostagingdir"
-	mount -t ext4 ""$isosyncdir".img" "$isosyncdir"
-	rsync -aHAXr --progress "$isostagingdir/" "$isosyncdir/"
-	cp -avx ""$isosyncdir"/boot/"$isokernelname"" ""$isorootdir"/boot/vmlinuz"
+	# prepare iso image layout
+	mkdir -p "$isorsynctarget"
+	dd if=/dev/zero of=""$isorsynctarget".img" bs=50M count=400
+	mkfs.ext4 ""$isorsynctarget".img"
+	mkdir -p "$isorsyncsource"
+	mkdir -p "$isocdrootdir"
+	mkdir -p "$isosquashfsdir"
+	mkdir -p "$isorealfsdir"
+	mkdir -p "$isogrubdir"
+	mkdir -p "$isoefidir"
+	# mount core squashfs and rsync it's contents into core iso image
+	mount -t squashfs "$chrootx64" "$isorsyncsource"
+	mount -t ext4 ""$isorsynctarget".img" "$isorsynctarget"
+	rsync -aHAXr --progress "$isorsyncsource/" "$isorsynctarget/"
+	# copy the kernel for live boot
+	cp -avx ""$isorsynctarget"/boot/"$isokernelname"" ""$isorootdir"/boot/vmlinuz"
+	# generate and copy initramfs for live boot
 	isostart
 	isoramfs
 	isostop
-	mv ""$isosyncdir"/boot/"$isodracutrd"" ""$isorootdir"/boot/initrd"
+	mv ""$isorsynctarget"/boot/"$isoramfsname"" ""$isorootdir"/boot/initrd"
+	# generate and copy efi bootloader for live boot
 	isostart
 	isoefiimg
 	isostop
-	mv ""$isosyncdir"/root/bootx64.efi" "$isoefibootdir"
-	chmod 755 ""$isoefibootdir"/bootx64.efi"
+	mv ""$isorsynctarget"/root/bootx64.efi" "$isoefidir"
+	chmod 755 ""$isoefidir"/bootx64.efi"
+	# generate and copy syslinux -> grub chainloader for unetbootin compatibility
 	isostart
-	isochainload
+	isochainloader
 	isostop
-	mv ""$isosyncdir"/root/core.img" "$isobootdir"
-	cp -avx ""$isosyncdir"/usr/lib64/grub/i386-pc/lnxboot.img" "$isobootdir"
+	mv ""$isorsynctarget"/root/core.img" "$isogrubdir"
+	cp -avx ""$isorsynctarget"/usr/lib64/grub/i386-pc/lnxboot.img" "$isogrubdir"
+	# enable live iso image system services
 	isostart
 	isousertree
 	isochroot
@@ -257,33 +296,43 @@ prepareiso () {
 	isostart
 	isoservices
 	isostop
-	umount -l "$isosyncdir" > /dev/null 2>&1
-	mv ""$isosyncdir".img"  "$isolivesqfsdir"
-	mksquashfs "$isosupersquashdir" ""$isorootdir"/squashfs.img" -b 1048576 -comp xz -Xdict-size 100%
-	mv ""$isorootdir/"squashfs.img" "$isoliveosdir"
+	umount -l "$isorsynctarget" > /dev/null 2>&1
+	# move "real" live filesystem into right place
+	mv ""$isorsynctarget".img"  "$isorealfsdir"
+	# compress "fake" live filesystem
+	mksquashfs "$isocdrootdir" ""$isorootdir"/squashfs.img" -b 1048576 -comp xz -Xdict-size 100%
+	mv ""$isorootdir/"squashfs.img" "$isosquashfsdir"
+	# dracut requires "real" ext4 live filesystem to be placed 
+	# into a "fake" squashfs live filesystem as bellow :
+	# /cdroot/LiveOS/squashfs.img/LiveOS/rootfs.img 
+	# squashfs.img is the "fake" squashfs live filesystem
+	# rootfs.img is the "real" ext4 live filesystem
 }
 
-bootcoreiso () {
-	git clone https://gitlab.com/"$releasename"/boot-core.git "$bootcorepath"
-	cp -avx "$bootcorefiles" "$isorootdir"
+bootloaderiso () {
+	# get grub2 live boot configs and place them into right place
+	git clone https://gitlab.com/"$releasename"/boot-core.git "$bootloaderfetchpath"
+	cp -avx "$bootloaderconfigs" "$isorootdir"
 }
 
 cleanupiso () {
-	umount "$isostagingdir"
-	rm -rf "$isosyncdir"
-	rm -rf "$isostagingdir"
-	rm -rf "$isosupersquashdir"
-	rm -rf "$bootcorepath"
+	# cleanup temporary files used during iso image layout preparation
+	umount "$isorsyncsource"
+	rm -rf "$isorsynctarget"
+	rm -rf "$isorsyncsource"
+	rm -rf "$isocdrootdir"
+	rm -rf "$bootloaderfetchpath"
 }
 
 makeisoimg () {
+	# create iso image
 	grub2-mkrescue -o ""$releasename"-"$releasetarget"-"$releaseversion"-"$isomainarch".iso" "$isorootdir"
 }
 
 makeiso () {
 	chrootchecksum
 	prepareiso
-	bootcoreiso
+	bootloaderiso
 	cleanupiso
 	makeisoimg
 }
@@ -291,6 +340,7 @@ makeiso () {
 # modechange functions
 
 removeportagetree() {
+	# remove portage tree, but leave packages and distfiles directories intact
 	if [ -d ""$portagedir"/.git" ] ; then
 		einfo "Removing gentoo portage tree"
 		find "$portagedir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
@@ -298,11 +348,13 @@ removeportagetree() {
 }
 
 removeoverlays() {
+	# remove redcore overlay
 	einfo "Removing "$releasename"-"$releasetarget" overlay"
 	layman -d "$releasename"-"$releasetarget" > /dev/null 2>&1
 }
 
 removeportageconfig() {
+	# remove redcore buildsystem (portage configuration)
 	einfo "Removing "$releasename"-"$releasetarget" buildsystem"
 	rm ""$confdir"/make.conf" > /dev/null 2>&1
 	rm ""$confdir"/make.profile" > /dev/null 2>&1
@@ -317,6 +369,7 @@ resetmode () {
 }
 
 fetchportageconfig() {
+	# fetch redcore buildsystem (portage configuration)
 	pushd /opt > /dev/null 2>&1
 	einfo "Injecting "$releasename"-"$releasetarget" buildsystem"
 	git clone https://gitlab.com/redcore/redcore-build.git
@@ -324,6 +377,7 @@ fetchportageconfig() {
 }
 
 fetchfullportagetree() {
+	# fetch full portage tree
 	if [[ ! -d "$portagedir"/.git ]] ; then
 		einfo "Injecting mixedmode/srcmode (full) gentoo portage tree"
 		cd "$portagedir" && git init > /dev/null 2>&1
@@ -335,6 +389,10 @@ fetchfullportagetree() {
 }
 
 fetchminimalportagetree() {
+	# fetch minimal portage tree
+	# in binmode we don't want the whole tree of gentoo ebuilds
+	# but we need portage profiles portage metadata && portage eclasses
+	# so make a sparse-checkout, to fetch only what we need
 	if [[ ! -d "$portagedir"/.git ]] ; then
 		einfo "Injecting binmode (minimal) gentoo portage tree"
 		cd "$portagedir" && git init > /dev/null 2>&1
@@ -351,11 +409,13 @@ fetchminimalportagetree() {
 }
 
 fetchoverlays () {
+	# fetch redcore overlay
 	einfo "Injecting "$releasename"-"$releasetarget" overlay"
 	layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml
 }
 
 setbinmodeconfig() {
+	# set make.conf to binmode, portage will always use binary packages from binhost
 	ln -sf "$gitdir" "$confdir"
 	ln -sf "$confdir"/make.conf.amd64-binmode "$confdir"/make.conf
 	eselect profile set 1
@@ -364,6 +424,9 @@ setbinmodeconfig() {
 }
 
 setmixedmodeconfig() {
+	# set make.conf to mixedmode, portage will prefer binary packages over ebuilds
+	# but will use ebuilds if they are newer than binary packages from binhost
+	# or if the binary package is not available in binhost
 	ln -sf "$gitdir" "$confdir"
 	ln -sf "$confdir"/make.conf.amd64-mixedmode "$confdir"/make.conf
 	eselect profile set 1
@@ -372,6 +435,7 @@ setmixedmodeconfig() {
 }
 
 setsrcmodeconfig () {
+	# set make.conf to srcmode, portage will always use ebuilds
 	ln -sf "$gitdir" "$confdir"
 	ln -sf "$confdir"/make.conf.amd64-srcmode "$confdir"/make.conf
 	eselect profile set 1
