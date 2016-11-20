@@ -459,7 +459,7 @@ mixedmode() {
 	fetchfullportagetree
 	fetchoverlays
 	fetchportageconfig
-	setmixedconfig
+	setmixedmodeconfig
 }
 
 srcmode() {
