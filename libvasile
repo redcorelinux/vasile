@@ -40,7 +40,7 @@ export local isomainarch="x86_64"
 export local isobinmode="vasile --binmode"
 export local isokernelname="kernel-genkernel-"$isomainarch"-"$kernelver""
 export local isoramfsname="initramfs-genkernel-"$isomainarch"-"$kernelver""
-export local isoramfscmd="dracut -N -a dmsquash-live -a pollcdrom --force --kver "$kernelver""
+export local isoramfscmd="dracut -N -a dmsquash-live -a pollcdrom --force"
 export local isochainloadcmd="grub2-mkimage -d /usr/lib64/grub/i386-pc -o core.img -O i386-pc biosdisk part_msdos fat"
 export local isoeficmd="grub2-mkimage -d /usr/lib64/grub/x86_64-efi -o bootx64.efi -O x86_64-efi ext2 fat udf btrfs ntfs reiserfs xfs hfsplus lvm ata part_msdos part_gpt part_apple bsd search_fs_uuid normal chain iso9660 configfile help loadenv reboot cat search memdisk tar boot linux chain"
 
