@@ -117,6 +117,7 @@ chrootchecksum () {
 }
 
 dkmsmod () {
+	checkroot
 	# build and install any 3rd party kernel modules using DKMS
 	if [[ -x $(which dkms) ]] ; then
 		for i in $(dkms status | cut -d " " -f1,2 | sed -e 's/,//g' | sed -e 's/ /\//g' | sed -e 's/://g') ; do
