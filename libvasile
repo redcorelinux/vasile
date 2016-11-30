@@ -260,7 +260,7 @@ isoservices () {
 
 isomodules () {
 	# build and install any 3rd party kernel modules using DKMS (virtualbox-guest in our case)
-	chroot "$isosynctarget" su - "$isouser" -c "$isodkms"
+	chroot "$isorsynctarget" su - "$isouser" -c "$isodkms"
 }
 
 isochroot () {
