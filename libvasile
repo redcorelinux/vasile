@@ -247,13 +247,18 @@ isoservices () {
 	done
 }
 
-isomodules () {
-	# build any 3rd party kernel modules using DKMS (virtualbox-guest in our case)
+isodkms () {
+	# prepare any 3rd party kernel modules using DKMS (virtualbox-guest in our case)
 	if [[ -x $(which dkms) ]] ; then
 		for i in $(dkms status | cut -d " " -f1,2 | sed -e 's/,//g' | sed -e 's/ /\//g' | sed -e 's/://g') ; do
 			dkms install $i
 		done
 	fi
+}
+
+isomodules () {
+	# build and install any 3rd party kernel modules using DKMS (virtualbox-guest in our case)
+	chroot "$isosynctarget" su - "$isouser" -c isodkms
 }
 
 isochroot () {
@@ -303,7 +308,7 @@ prepareiso () {
 	isousertree
 	isochroot
 	isostop
-	# build any 3rd party kernel modules using DKMS (virtualbox-guest in our case)
+	# build and install any 3rd party kernel modules using DKMS (virtualbox-guest in our case)
 	isostart
 	isomodules
 	isostop
