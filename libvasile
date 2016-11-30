@@ -38,6 +38,7 @@ export local chrootsrcmode="vasile --srcmode"
 export local isouser="root"
 export local isomainarch="x86_64"
 export local isobinmode="vasile --binmode"
+export local isodkms="vasile --dkms"
 export local isokernelname="kernel-genkernel-"$isomainarch"-"$kernelver""
 export local isoramfsname="initramfs-genkernel-"$isomainarch"-"$kernelver""
 export local isoramfscmd="dracut -N -a dmsquash-live -a pollcdrom --force"
@@ -113,6 +114,15 @@ chrootchecksum () {
 			exit 1
 		fi
 	done
+}
+
+dkmsmod () {
+	# build and install any 3rd party kernel modules using DKMS
+	if [[ -x $(which dkms) ]] ; then
+		for i in $(dkms status | cut -d " " -f1,2 | sed -e 's/,//g' | sed -e 's/ /\//g' | sed -e 's/://g') ; do
+			dkms install $i
+		done
+	fi
 }
 
 # build functions
@@ -247,18 +257,9 @@ isoservices () {
 	done
 }
 
-isodkms () {
-	# prepare any 3rd party kernel modules using DKMS (virtualbox-guest in our case)
-	if [[ -x $(which dkms) ]] ; then
-		for i in $(dkms status | cut -d " " -f1,2 | sed -e 's/,//g' | sed -e 's/ /\//g' | sed -e 's/://g') ; do
-			dkms install $i
-		done
-	fi
-}
-
 isomodules () {
 	# build and install any 3rd party kernel modules using DKMS (virtualbox-guest in our case)
-	chroot "$isosynctarget" su - "$isouser" -c isodkms
+	chroot "$isosynctarget" su - "$isouser" -c "$isodkms"
 }
 
 isochroot () {
