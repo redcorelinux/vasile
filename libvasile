@@ -12,7 +12,7 @@ export local releaseversion="1"
 
 # kernel version && name from inside core squashfs
 
-export local kernelver="4.8.10-"$releasename""
+export local kernelver="4.8.15-"$releasename""
 
 # core squahfs name and md5 checksum file
 
