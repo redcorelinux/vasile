@@ -10,9 +10,9 @@ export local releasename="redcore"
 export local releasetarget="desktop"
 export local releaseversion="1"
 
-# kernel version && name from inside core squashfs
+# kernel version && name from inside core squashfs (we need to know this, to generate a matching kernel/live initramfs)
 
-export local kernelver="4.8.15-"$releasename""
+export local kernelver="4.8.16-"$releasename""
 
 # core squahfs name and md5 checksum file
 
