@@ -12,7 +12,7 @@ export local releaseversion="1"
 
 # kernel version && name from inside core squashfs (we need to know this, to generate a matching kernel/live initramfs)
 
-export local kernelver="4.9.5-"$releasename""
+export local kernelver="4.9.15-"$releasename""
 
 # core squahfs name and md5 checksum file
 
