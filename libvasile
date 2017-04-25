@@ -333,7 +333,7 @@ prepareiso () {
 
 bootloaderiso () {
 	# get grub2 live boot configs and place them into right place
-	git clone https://gitlab.com/"$releasename"/boot-core.git "$bootloaderfetchpath"
+	git clone https://github.com/redcorelinux/boot-core.git "$bootloaderfetchpath"
 	cp -avx "$bootloaderconfigs" "$isorootdir"
 }
 
@@ -396,7 +396,7 @@ fetchportageconfig() {
 	# fetch redcore buildsystem (portage configuration)
 	pushd /opt > /dev/null 2>&1
 	einfo "Injecting "$releasename"-"$releasetarget" buildsystem"
-	git clone https://gitlab.com/redcore/redcore-build.git
+	git clone https://github.com/redcorelinux/"$releasename"-build.git
 	popd > /dev/null 2>&1
 }
 
@@ -405,7 +405,7 @@ fetchfullportagetree() {
 	if [[ ! -d "$portagedir"/.git ]] ; then
 		einfo "Injecting mixedmode/srcmode (full) gentoo portage tree"
 		cd "$portagedir" && git init > /dev/null 2>&1
-		git remote add origin https://gitlab.com/redcore/portage.git
+		git remote add origin https://github.com/redcorelinux/portage.git
 		git pull --depth=1 origin master
 		git branch -u origin/master master
 		rm -rf ""$portagedir"/profiles/updates"
@@ -420,7 +420,7 @@ fetchminimalportagetree() {
 	if [[ ! -d "$portagedir"/.git ]] ; then
 		einfo "Injecting binmode (minimal) gentoo portage tree"
 		cd "$portagedir" && git init > /dev/null 2>&1
-		git remote add origin https://gitlab.com/redcore/portage.git
+		git remote add origin https://github.com/redcorelinux/portage.git
 		git config core.sparsecheckout true
 		echo "profiles/*" >> .git/info/sparse-checkout
 		echo "metadata/*" >> .git/info/sparse-checkout
@@ -435,7 +435,7 @@ fetchminimalportagetree() {
 fetchoverlays () {
 	# fetch redcore overlay
 	einfo "Injecting "$releasename"-"$releasetarget" overlay"
-	layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml
+	layman -f -a "$releasename"-"$releasetarget" -o https://github.com/redcorelinux/"$releasename"-"$releasetarget"/raw/master/overlay-github.xml
 }
 
 setbinmodeconfig() {
