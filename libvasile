@@ -252,9 +252,9 @@ isochainloader () {
 }
 
 isoservices () {
-	# enable live iso image system services
-	for service in avahi-daemon cups cronie connman dkms dm-event redcorelive lightdm lvm2-lvmetad lvm2-monitor syslog-ng ; do
-		chroot "$isorsynctarget" su - "$isouser" -c "systemctl enable "$service""
+	# enable live iso image system services (runlevel : default)
+	for service in dbus connman avahi-daemon syslog-ng cupsd cronie cgmanager consolekit alsasound bluetooth xdm ; do
+		chroot "$isorsynctarget" su - "$isouser" -c "rc-update add "$service" default"
 	done
 }
 
