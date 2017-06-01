@@ -321,7 +321,10 @@ prepareiso () {
 	isostart
 	isoservices
 	isostop
+	# umount "real" live filesystem
 	umount -l "$isorsynctarget" > /dev/null 2>&1
+	# fix any possible "real" live filesystem corruptions
+	e2fsck -fy ""$isorsynctarget".img"
 	# move "real" live filesystem into right place
 	mv ""$isorsynctarget".img"  "$isorealfsdir"
 	# compress "fake" live filesystem
