@@ -277,8 +277,8 @@ isochroot () {
 prepareiso () {
 	# prepare iso image layout
 	mkdir -p "$isorsynctarget"
-	dd if=/dev/zero of=""$isorsynctarget".img" bs=50M count=400
-	mkfs.ext4 ""$isorsynctarget".img"
+	dd if=/dev/zero of=""$isorsynctarget".img" bs=1M count=10240 && sync
+	mkfs.ext2 -F ""$isorsynctarget".img"
 	mkdir -p "$isorsyncsource"
 	mkdir -p "$isocdrootdir"
 	mkdir -p "$isosquashfsdir"
@@ -324,17 +324,17 @@ prepareiso () {
 	# umount "real" live filesystem
 	umount -l "$isorsynctarget" > /dev/null 2>&1
 	# fix any possible "real" live filesystem corruptions
-	e2fsck -fy ""$isorsynctarget".img"
+	# e2fsck -fy ""$isorsynctarget".img"
 	# move "real" live filesystem into right place
 	mv ""$isorsynctarget".img"  "$isorealfsdir"
 	# compress "fake" live filesystem
 	mksquashfs "$isocdrootdir" ""$isorootdir"/squashfs.img" -b 1048576 -comp xz -Xdict-size 100%
 	mv ""$isorootdir/"squashfs.img" "$isosquashfsdir"
-	# dracut requires "real" ext4 live filesystem to be placed 
+	# dracut requires "real" live filesystem to be placed 
 	# into a "fake" squashfs live filesystem as bellow :
 	# /cdroot/LiveOS/squashfs.img/LiveOS/rootfs.img 
 	# squashfs.img is the "fake" squashfs live filesystem
-	# rootfs.img is the "real" ext4 live filesystem
+	# rootfs.img is the "real" live filesystem
 }
 
 bootloaderiso () {
