@@ -256,7 +256,7 @@ isoservices () {
 	chroot "$isorsynctarget" su - "$isouser" -c "rc-update add redcorelive boot"
 
 	# enable live iso system services (runlevel : default)
-	for service in dbus connman avahi-daemon syslog-ng cupsd cronie cgmanager consolekit alsasound bluetooth xdm ; do
+	for service in dbus connman avahi-daemon syslog-ng cupsd cronie cgmanager consolekit alsasound bluetooth xdm virtualbox-guest-additions ; do
 		chroot "$isorsynctarget" su - "$isouser" -c "rc-update add "$service" default"
 	done
 }
