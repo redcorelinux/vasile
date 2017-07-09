@@ -43,7 +43,8 @@ export local isokernelname="kernel-genkernel-"$isomainarch"-"$kernelver""
 export local isoramfsname="initramfs-genkernel-"$isomainarch"-"$kernelver""
 export local isoramfscmd="dracut -N -a dmsquash-live -a pollcdrom --force"
 export local isochainloadcmd="grub2-mkimage -d /usr/lib64/grub/i386-pc -o core.img -O i386-pc biosdisk part_msdos fat -p /root"
-export local isoeficmd="grub2-mkimage -d /usr/lib64/grub/x86_64-efi -o bootx64.efi -O x86_64-efi ext2 fat udf btrfs ntfs reiserfs xfs hfsplus lvm ata part_msdos part_gpt part_apple bsd search_fs_uuid normal chain iso9660 configfile help loadenv reboot cat search memdisk tar boot linux chain -p /root"
+export local isoefix64cmd="grub2-mkimage -d /usr/lib64/grub/x86_64-efi -o bootx64.efi -O x86_64-efi ext2 fat udf btrfs ntfs reiserfs xfs hfsplus lvm ata part_msdos part_gpt part_apple bsd search_fs_uuid normal chain iso9660 configfile help loadenv reboot cat search memdisk tar boot linux chain -p /root"
+export local isoefiia32cmd="grub2-mkimage -d /usr/lib64/grub/i386-efi -o bootia32.efi -O i386-efi ext2 fat udf btrfs ntfs reiserfs xfs hfsplus lvm ata part_msdos part_gpt part_apple bsd search_fs_uuid normal chain iso9660 configfile help loadenv reboot cat search memdisk tar boot linux chain -p /root"
 
 # iso image layout variables
 
@@ -243,7 +244,8 @@ isoramfs () {
 
 isoefiimg () {
 	# generate efi bootloader
-	chroot "$isorsynctarget" su - "$isouser" -c "$isoeficmd"
+	chroot "$isorsynctarget" su - "$isouser" -c "$isoefix64cmd"
+	chroot "$isorsynctarget" su - "$isouser" -c "$isoefiia32cmd"
 }
 
 isochainloader () {
@@ -302,6 +304,8 @@ prepareiso () {
 	isostop
 	mv ""$isorsynctarget"/root/bootx64.efi" "$isoefidir"
 	chmod 755 ""$isoefidir"/bootx64.efi"
+	mv ""$isorsynctarget"/root/bootia32.efi" "$isoefidir"
+	chmod 755 ""$isoefidir"/bootia32.efi"
 	# generate and copy syslinux -> grub chainloader for unetbootin compatibility
 	isostart
 	isochainloader
