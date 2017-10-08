@@ -12,7 +12,7 @@ export local releaseversion="1"
 
 # kernel version && name from inside core squashfs (we need to know this, to generate a matching kernel/live initramfs)
 
-export local kernelver="4.9.40-"$releasename"-lts"
+export local kernelver="4.9.53-"$releasename"-lts"
 
 # core squahfs name and md5 checksum file
 
@@ -62,6 +62,7 @@ export local isosquashfsdir=""$isorootdir"/LiveOS"
 # modechange variables
 
 export local portagedir="/usr/portage"
+export local lportagedir="/usr/local/portage"
 export local confdir="/etc/portage"
 export local gitdir="/opt/redcore-build/conf/intel/portage"
 export local clonedir="/opt/redcore-build"
@@ -374,8 +375,8 @@ makeiso () {
 
 removeportagetree() {
 	# remove portage tree, but leave packages and distfiles directories intact
+	einfo "Removing gentoo portage tree"
 	if [ -d ""$portagedir"/.git" ] ; then
-		einfo "Removing gentoo portage tree"
 		find "$portagedir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
 	fi
 }
@@ -383,7 +384,9 @@ removeportagetree() {
 removeoverlays() {
 	# remove redcore overlay
 	einfo "Removing "$releasename"-"$releasetarget" overlay"
-	layman -d "$releasename"-"$releasetarget" > /dev/null 2>&1
+	if [ -d ""$lportagedir"/.git" ] ; then
+		find "$lportagedir" -mindepth 1 -exec rm -rf {} \; > /dev/null 2>&1
+	fi
 }
 
 removeportageconfig() {
@@ -412,7 +415,7 @@ fetchportageconfig() {
 
 fetchfullportagetree() {
 	# fetch full portage tree
-	if [[ ! -d "$portagedir"/.git ]] ; then
+	if [ ! -d ""$portagedir"/.git" ] ; then
 		einfo "Injecting mixedmode/srcmode (full) gentoo portage tree"
 		cd "$portagedir" && git init > /dev/null 2>&1
 		git remote add origin https://gitlab.com/redcore/portage.git
@@ -427,7 +430,7 @@ fetchminimalportagetree() {
 	# in binmode we don't want the whole tree of gentoo ebuilds
 	# but we need portage profiles portage metadata && portage eclasses
 	# so make a sparse-checkout, to fetch only what we need
-	if [[ ! -d "$portagedir"/.git ]] ; then
+	if [ ! -d ""$portagedir"/.git" ] ; then
 		einfo "Injecting binmode (minimal) gentoo portage tree"
 		cd "$portagedir" && git init > /dev/null 2>&1
 		git remote add origin https://gitlab.com/redcore/portage.git
@@ -444,8 +447,13 @@ fetchminimalportagetree() {
 
 fetchoverlays () {
 	# fetch redcore overlay
-	einfo "Injecting "$releasename"-"$releasetarget" overlay"
-	layman -f -a "$releasename"-"$releasetarget" -o https://gitlab.com/"$releasename"/"$releasename"-"$releasetarget"/raw/master/overlay.xml
+	if [ ! -d ""$lportagedir"/.git" ] ; then
+		einfo "Injecting "$releasename"-"$releasetarget" overlay"
+		cd "$lportagedir" && git init > /dev/null 2>&1
+		git remote add origin https://gitlab.com/redcore/redcore-desktop.git
+		git pull --depth=1 origin master
+		git branch -u origin/master master
+	fi
 }
 
 setbinmodeconfig() {
