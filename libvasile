@@ -61,11 +61,11 @@ export local isosquashfsdir=""$isorootdir"/LiveOS"
 
 # modechange variables
 
-export local portagedir="/usr/portage"
-export local lportagedir="/usr/local/portage"
-export local confdir="/etc/portage"
-export local gitdir="/opt/redcore-build/conf/intel/portage"
-export local clonedir="/opt/redcore-build"
+export local gentooportdir="/usr/ports/gentoo"
+export local redcoreportdir="/usr/ports/redcore"
+export local portconfdir="/etc/portage"
+export local portgitdir="/opt/redcore-build/conf/intel/portage"
+export local portclonedir="/opt/redcore-build"
 
 # generic functions (used for both build && iso creation)
 
@@ -158,8 +158,8 @@ chrootstop () {
 	umount -l "$overlaydir"/dev/shm > /dev/null 2>&1
 	umount -l "$overlaydir"/dev > /dev/null 2>&1
 	umount -l "$overlaydir"/tmp > /dev/null 2>&1
-	umount -l "$overlaydir"/usr/portage/packages > /dev/null 2>&1
-	umount -l "$overlaydir"/usr/portage/distfiles > /dev/null 2>&1
+	umount -l "$overlaydir"/usr/ports/gentoo/packages > /dev/null 2>&1
+	umount -l "$overlaydir"/usr/ports/gentoo/distfiles > /dev/null 2>&1
 	umount -l "$overlaydir" > /dev/null 2>&1
 	umount -l "$rodir" > /dev/null 2>&1
 }
@@ -168,8 +168,8 @@ chrootstart () {
 	# mount core squashfs in overlay
 	mount -t squashfs "$chrootx64" "$rodir"
 	mount -t overlay -o lowerdir="$rodir",upperdir="$rwdir",workdir="$workdir" overlay "$overlaydir"
-	mount -o bind packages "$overlaydir"/usr/portage/packages
-	mount -o bind distfiles "$overlaydir"/usr/portage/distfiles
+	mount -o bind packages "$overlaydir"/usr/ports/gentoo/packages
+	mount -o bind distfiles "$overlaydir"/usr/ports/gentoo/distfiles
 	mount -t proc proc "$overlaydir"/proc
 	mount -t sysfs sysfs "$overlaydir"/sys
 	mount -t devtmpfs -o relatime,size=3055348k,nr_inodes=763837,mode=755 none "$overlaydir"/dev
@@ -213,7 +213,7 @@ makepkg () {
 
 isostart () {
 	# mount iso image core
-	mount -o bind packages "$isorsynctarget"/usr/portage/packages
+	mount -o bind packages "$isorsynctarget"/usr/ports/gentoo/packages
 	mount -t proc proc "$isorsynctarget"/proc
 	mount -t sysfs sysfs "$isorsynctarget"/sys
 	mount -t devtmpfs -o relatime,size=3055348k,nr_inodes=763837,mode=755 none "$isorsynctarget"/dev
@@ -230,7 +230,7 @@ isostop () {
 	umount -l "$isorsynctarget"/dev/shm > /dev/null 2>&1
 	umount -l "$isorsynctarget"/dev > /dev/null 2>&1
 	umount -l "$isorsynctarget"/tmp > /dev/null 2>&1
-	umount -l "$isorsynctarget"/usr/portage/packages > /dev/null 2>&1
+	umount -l "$isorsynctarget"/usr/ports/gentoo/packages > /dev/null 2>&1
 }
 
 isousertree () {
@@ -376,26 +376,26 @@ makeiso () {
 removeportagetree() {
 	# remove portage tree, but leave packages and distfiles directories intact
 	einfo "Removing gentoo portage tree"
-	if [ -d ""$portagedir"/.git" ] ; then
-		find "$portagedir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
+	if [ -d ""$gentooportdir"/.git" ] ; then
+		find "$gentooportdir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
 	fi
 }
 
 removeoverlays() {
 	# remove redcore overlay
 	einfo "Removing "$releasename"-"$releasetarget" overlay"
-	if [ -d ""$lportagedir"/.git" ] ; then
-		find "$lportagedir" -mindepth 1 -exec rm -rf {} \; > /dev/null 2>&1
+	if [ -d ""$redcoreportdir"/.git" ] ; then
+		find "$redcoreportdir" -mindepth 1 -exec rm -rf {} \; > /dev/null 2>&1
 	fi
 }
 
 removeportageconfig() {
 	# remove redcore buildsystem (portage configuration)
 	einfo "Removing "$releasename"-"$releasetarget" buildsystem"
-	rm ""$confdir"/make.conf" > /dev/null 2>&1
-	rm ""$confdir"/make.profile" > /dev/null 2>&1
-	rm "$confdir" > /dev/null 2>&1
-	rm -rf "$clonedir" > /dev/null 2>&1
+	rm ""$portconfdir"/make.conf" > /dev/null 2>&1
+	rm ""$portconfdir"/make.profile" > /dev/null 2>&1
+	rm "$portconfdir" > /dev/null 2>&1
+	rm -rf "$portclonedir" > /dev/null 2>&1
 }
 
 resetmode () {
@@ -415,13 +415,13 @@ fetchportageconfig() {
 
 fetchfullportagetree() {
 	# fetch full portage tree
-	if [ ! -d ""$portagedir"/.git" ] ; then
+	if [ ! -d ""$gentooportdir"/.git" ] ; then
 		einfo "Injecting mixedmode/srcmode (full) gentoo portage tree"
-		cd "$portagedir" && git init > /dev/null 2>&1
+		cd "$gentooportdir" && git init > /dev/null 2>&1
 		git remote add origin https://gitlab.com/redcore/portage.git
 		git pull --depth=1 origin master
 		git branch -u origin/master master
-		rm -rf ""$portagedir"/profiles/updates"
+		rm -rf ""$gentooportdir"/profiles/updates"
 	fi
 }
 
@@ -430,9 +430,9 @@ fetchminimalportagetree() {
 	# in binmode we don't want the whole tree of gentoo ebuilds
 	# but we need portage profiles portage metadata && portage eclasses
 	# so make a sparse-checkout, to fetch only what we need
-	if [ ! -d ""$portagedir"/.git" ] ; then
+	if [ ! -d ""$gentooportdir"/.git" ] ; then
 		einfo "Injecting binmode (minimal) gentoo portage tree"
-		cd "$portagedir" && git init > /dev/null 2>&1
+		cd "$gentooportdir" && git init > /dev/null 2>&1
 		git remote add origin https://gitlab.com/redcore/portage.git
 		git config core.sparsecheckout true
 		echo "profiles/*" >> .git/info/sparse-checkout
@@ -441,15 +441,15 @@ fetchminimalportagetree() {
 		echo ".gitignore" >> .git/info/sparse-checkout
 		git pull --depth=1 origin master
 		git branch -u origin/master master
-		rm -rf ""$portagedir"/profiles/updates"
+		rm -rf ""$gentooportdir"/profiles/updates"
 	fi
 }
 
 fetchoverlays () {
 	# fetch redcore overlay
-	if [ ! -d ""$lportagedir"/.git" ] ; then
+	if [ ! -d ""$redcoreportdir"/.git" ] ; then
 		einfo "Injecting "$releasename"-"$releasetarget" overlay"
-		cd "$lportagedir" && git init > /dev/null 2>&1
+		cd "$redcoreportdir" && git init > /dev/null 2>&1
 		git remote add origin https://gitlab.com/redcore/redcore-desktop.git
 		git pull --depth=1 origin master
 		git branch -u origin/master master
@@ -458,8 +458,8 @@ fetchoverlays () {
 
 setbinmodeconfig() {
 	# set make.conf to binmode, portage will always use binary packages from binhost
-	ln -sf "$gitdir" "$confdir"
-	ln -sf "$confdir"/make.conf.amd64-binmode "$confdir"/make.conf
+	ln -sf "$portgitdir" "$portconfdir"
+	ln -sf "$portconfdir"/make.conf.amd64-binmode "$portconfdir"/make.conf
 	eselect profile set 1
 	env-update
 	. /etc/profile
@@ -469,8 +469,8 @@ setmixedmodeconfig() {
 	# set make.conf to mixedmode, portage will prefer binary packages over ebuilds
 	# but will use ebuilds if they are newer than binary packages from binhost
 	# or if the binary package is not available in binhost
-	ln -sf "$gitdir" "$confdir"
-	ln -sf "$confdir"/make.conf.amd64-mixedmode "$confdir"/make.conf
+	ln -sf "$portgitdir" "$portconfdir"
+	ln -sf "$portconfdir"/make.conf.amd64-mixedmode "$portconfdir"/make.conf
 	eselect profile set 1
 	env-update
 	. /etc/profile
@@ -478,8 +478,8 @@ setmixedmodeconfig() {
 
 setsrcmodeconfig () {
 	# set make.conf to srcmode, portage will always use ebuilds
-	ln -sf "$gitdir" "$confdir"
-	ln -sf "$confdir"/make.conf.amd64-srcmode "$confdir"/make.conf
+	ln -sf "$portgitdir" "$portconfdir"
+	ln -sf "$portconfdir"/make.conf.amd64-srcmode "$portconfdir"/make.conf
 	eselect profile set 1
 	env-update
 	. /etc/profile
