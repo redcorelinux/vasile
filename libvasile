@@ -158,8 +158,8 @@ chrootstop () {
 	umount -l "$overlaydir"/dev/shm > /dev/null 2>&1
 	umount -l "$overlaydir"/dev > /dev/null 2>&1
 	umount -l "$overlaydir"/tmp > /dev/null 2>&1
-	umount -l "$overlaydir"/usr/ports/gentoo/packages > /dev/null 2>&1
-	umount -l "$overlaydir"/usr/ports/gentoo/distfiles > /dev/null 2>&1
+	umount -l "$overlaydir"/var/cache/packages > /dev/null 2>&1
+	umount -l "$overlaydir"/var/cache/distfiles > /dev/null 2>&1
 	umount -l "$overlaydir" > /dev/null 2>&1
 	umount -l "$rodir" > /dev/null 2>&1
 }
@@ -168,8 +168,8 @@ chrootstart () {
 	# mount core squashfs in overlay
 	mount -t squashfs "$chrootx64" "$rodir"
 	mount -t overlay -o lowerdir="$rodir",upperdir="$rwdir",workdir="$workdir" overlay "$overlaydir"
-	mount -o bind packages "$overlaydir"/usr/ports/gentoo/packages
-	mount -o bind distfiles "$overlaydir"/usr/ports/gentoo/distfiles
+	mount -o bind packages "$overlaydir"/var/cache/packages
+	mount -o bind distfiles "$overlaydir"/var/cache/distfiles
 	mount -t proc proc "$overlaydir"/proc
 	mount -t sysfs sysfs "$overlaydir"/sys
 	mount -t devtmpfs -o relatime,size=3055348k,nr_inodes=763837,mode=755 none "$overlaydir"/dev
@@ -213,7 +213,7 @@ makepkg () {
 
 isostart () {
 	# mount iso image core
-	mount -o bind packages "$isorsynctarget"/usr/ports/gentoo/packages
+	mount -o bind packages "$isorsynctarget"/var/cache/packages
 	mount -t proc proc "$isorsynctarget"/proc
 	mount -t sysfs sysfs "$isorsynctarget"/sys
 	mount -t devtmpfs -o relatime,size=3055348k,nr_inodes=763837,mode=755 none "$isorsynctarget"/dev
@@ -230,7 +230,7 @@ isostop () {
 	umount -l "$isorsynctarget"/dev/shm > /dev/null 2>&1
 	umount -l "$isorsynctarget"/dev > /dev/null 2>&1
 	umount -l "$isorsynctarget"/tmp > /dev/null 2>&1
-	umount -l "$isorsynctarget"/usr/ports/gentoo/packages > /dev/null 2>&1
+	umount -l "$isorsynctarget"/var/cache/packages > /dev/null 2>&1
 }
 
 isousertree () {
@@ -377,7 +377,7 @@ removeportagetree() {
 	# remove portage tree, but leave packages and distfiles directories intact
 	einfo "Removing gentoo portage tree"
 	if [ -d ""$gentooportdir"/.git" ] ; then
-		find "$gentooportdir" -mindepth 1 -name "packages" -prune -o -name "distfiles" -prune -o -exec rm -rf {} \; > /dev/null 2>&1
+		find "$gentooportdir" -mindepth 1 -exec rm -rf {} \; > /dev/null 2>&1
 	fi
 }
 
@@ -445,12 +445,27 @@ fetchminimalportagetree() {
 	fi
 }
 
-fetchoverlays () {
-	# fetch redcore overlay
+fetchfulloverlays () {
+	# fetch full redcore overlay
 	if [ ! -d ""$redcoreportdir"/.git" ] ; then
 		einfo "Injecting "$releasename"-"$releasetarget" overlay"
 		cd "$redcoreportdir" && git init > /dev/null 2>&1
 		git remote add origin https://gitlab.com/redcore/redcore-desktop.git
+		git pull --depth=1 origin master
+		git branch -u origin/master master
+	fi
+}
+
+fetchminimaloverlays () {
+	# fetch minimal redcore overlay
+	if [ ! -d ""$redcoreportdir"/.git" ] ; then
+		einfo "Injecting binmode (minimal) "$releasename"-"$releasetarget" overlay"
+		cd "$redcoreportdir" && git init > /dev/null 2>&1
+		git remote add origin https://gitlab.com/redcore/redcore-desktop.git
+		git config core.sparsecheckout true
+		echo "profiles/*" >> .git/info/sparse-checkout
+		echo "metadata/*" >> .git/info/sparse-checkout
+		echo "eclass/*" >> .git/info/sparse-checkout
 		git pull --depth=1 origin master
 		git branch -u origin/master master
 	fi
@@ -488,7 +503,7 @@ setsrcmodeconfig () {
 binmode() {
 	resetmode
 	fetchminimalportagetree
-	fetchoverlays
+	fetchminimaloverlays
 	fetchportageconfig
 	setbinmodeconfig
 }
@@ -496,7 +511,7 @@ binmode() {
 mixedmode() {
 	resetmode
 	fetchfullportagetree
-	fetchoverlays
+	fetchfulloverlays
 	fetchportageconfig
 	setmixedmodeconfig
 }
@@ -504,7 +519,7 @@ mixedmode() {
 srcmode() {
 	resetmode
 	fetchfullportagetree
-	fetchoverlays
+	fetchfulloverlays
 	fetchportageconfig
 	setsrcmodeconfig
 }
