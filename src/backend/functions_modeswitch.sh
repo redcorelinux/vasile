@@ -26,7 +26,7 @@ resetmode () {
 	checkifroot
 	rmmainporttree
 	rmaddonporttree
-	rmportcfgtre
+	rmportcfgtree
 }
 
 dlmainportfulltree () {
