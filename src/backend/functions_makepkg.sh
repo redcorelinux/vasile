@@ -55,7 +55,7 @@ jailpkgstart () {
 	chroot "$overlaypath" su - "$jailuser"
 }
 
-jailmakepkg () {
+makepkg () {
 	checkifroot
 	checkjailsum
 	jailpkgprep
