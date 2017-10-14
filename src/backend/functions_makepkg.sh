@@ -8,7 +8,7 @@ jailpkgprep () {
 			done
 			jailpkgmnt
 			break
-		elif [[ -d "$ropath" && -d "$rwdpath" && -d "$workpath" && -d "$overlaypath" ]] ; then
+		elif [[ -d "$ropath" && -d "$rwpath" && -d "$workpath" && -d "$overlaypath" ]] ; then
 			jailpkgdmnt
 			for i in "$ropath" "$rwpath" "$workpath" "$overlaypath" ; do
 				rm -rf "$i"
