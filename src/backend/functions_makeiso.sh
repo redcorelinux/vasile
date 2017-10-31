@@ -38,9 +38,9 @@ jailisomkchload () {
 }
 
 jailisoenserv () {
-	chroot "$overlaypath" su - "$jailuser" -c "rc-update add redcorelive boot"
+	chroot "$jailsynctarget" su - "$jailuser" -c "rc-update add redcorelive boot"
 	for service in acpid dbus NetworkManager avahi-daemon syslog-ng cupsd cronie cgmanager consolekit alsasound bluetooth ntpd openrc-settingsd xdm virtualbox-guest-additions ; do
-		chroot "$overlaypath" su - "$jailuser" -c "rc-update add "$service" default"
+		chroot "$jailsynctarget" su - "$jailuser" -c "rc-update add "$service" default"
 	done
 }
 
