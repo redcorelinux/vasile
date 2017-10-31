@@ -138,7 +138,7 @@ mkclean () {
 	rm -rf "$jailsyncsource"
 	rm -rf "$jailsynctarget"
 	rm -rf "$jaildvdpath"
-	rm -rf "$jailbootldrpath"
+	rm -rf "$jailbootldrdlpath"
 }
 
 mkisoimg () {
