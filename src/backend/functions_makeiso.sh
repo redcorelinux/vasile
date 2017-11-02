@@ -116,7 +116,7 @@ mkliveimg () {
 	# unmount live filesystem image
 	umount -l "$jailsynctarget" > /dev/null 2>&1
 	# move live filesystem image where it should be
-	mv ""$jailsynctarget".img"  "$jaildvdpath"
+	mv ""$jailsynctarget".img"  "$jailrealfspath"
 	sync
 	# compress live filesystem image
 	mksquashfs "$jaildvdpath" ""$jailrootpath"/squashfs.img" -b 1048576 -comp xz -Xdict-size 100%
