@@ -2,16 +2,18 @@
 
 jailpkgprep () {
 	while : true ; do
-		if [[ ! -d "$ropath" && ! -d "$rwpath" && ! -d "$workpath" && ! -d "$overlaypath" ]] ; then
+		if [[ ! -d "$ropath" || ! -d "$rwpath" || ! -d "$workpath" || ! -d "$overlaypath" ]] ; then
+			export local i
 			for i in "$ropath" "$rwpath" "$workpath" "$overlaypath" ; do
 				mkdir "$i"
 			done
 			jailpkgmnt
 			break
-		elif [[ -d "$ropath" && -d "$rwpath" && -d "$workpath" && -d "$overlaypath" ]] ; then
+		elif [[ -d "$ropath" || -d "$rwpath" || -d "$workpath" || -d "$overlaypath" ]] ; then
 			jailpkgdmnt
-			for i in "$ropath" "$rwpath" "$workpath" "$overlaypath" ; do
-				rm -rf "$i"
+			export local j
+			for j in "$ropath" "$rwpath" "$workpath" "$overlaypath" ; do
+				rm -rf "$j"
 			done
 			continue
 		fi
