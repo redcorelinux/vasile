@@ -6,14 +6,13 @@
 
 # Import our variables and functions
 
-source /usr/lib/vasile/libvasile
+source /usr/lib/vasile/f_import.sh
 
 # Vasile need root privileges and a proper kernel to run
 # Also, running it in live mode is a really bad idea
 
 checkiflive
-kernelconfig
-
+checkkerncfg
 
 case $1 in
 	--makepkg)
