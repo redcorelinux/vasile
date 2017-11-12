@@ -56,7 +56,7 @@ jailisostart () {
 mkliveimg () {
 	# create live filesystem image layout
 	mkdir -p "$jailsynctarget"
-	truncate -s 10G ""$jailsynctarget".img"
+	dd if=/dev/zero of=""$jailsynctarget".img" bs=1M count=15360
 	sync
 	mkfs.ext2 -F ""$jailsynctarget".img"
 	mkdir -p "$jailsyncsource"

@@ -38,7 +38,7 @@ checkjailsum () {
 	fi
 }
 
-jaildkmsbuild () {
+dkmsmodbuild () {
 	checkifroot
 	if [[ -x /usr/sbin/dkms ]] ; then
 		for i in $(dkms status | cut -d " " -f1,2 | sed -e 's/,//g' | sed -e 's/ /\//g' | sed -e 's/://g') ; do

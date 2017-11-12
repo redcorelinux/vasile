@@ -34,7 +34,7 @@ case $1 in
 		srcmode
 		;;
 	--dkms)
-		dkmsmod
+		dkmsmodbuild
 		;;
 	--help)
 		showhelp
