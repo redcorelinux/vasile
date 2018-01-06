@@ -4,7 +4,7 @@ export local distupstream="gentoo"
 export local distname="redcore"
 export local disttarget="desktop"
 export local distver="1"
-export local kernver="4.14.10-"$distname"-lts"
+export local kernver="4.14.12-"$distname"-lts"
 
 export local jailx64=""$distname"_"$distver"_core_x64.squashfs"
 export local jailx64sum=""$jailx64".md5sum"
