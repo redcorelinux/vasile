@@ -101,7 +101,7 @@ injectportfulltree () {
 setbinmodecfg () {
 	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
 	ln -sf "$jailportcfgtarget"/make.conf.amd64-binmode "$jailportcfgtarget"/make.conf
-	eselect profile set redcore:default/linux/amd64/13.0
+	eselect profile set default/linux/amd64/17.0/hardened
 	env-update
 	. /etc/profile
 }
@@ -115,7 +115,7 @@ binmode () {
 setmixedmodecfg () {
 	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
 	ln -sf "$jailportcfgtarget"/make.conf.amd64-mixedmode "$jailportcfgtarget"/make.conf
-	eselect profile set redcore:default/linux/amd64/13.0
+	eselect profile set default/linux/amd64/17.0/hardened
 	env-update
 	. /etc/profile
 }
@@ -129,7 +129,7 @@ mixedmode () {
 setsrcmodecfg () {
 	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
 	ln -sf "$jailportcfgtarget"/make.conf.amd64-srcmode "$jailportcfgtarget"/make.conf
-	eselect profile set redcore:default/linux/amd64/13.0
+	eselect profile set default/linux/amd64/17.0/hardened
 	env-update
 	. /etc/profile
 }
