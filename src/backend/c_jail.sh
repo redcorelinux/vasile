@@ -3,6 +3,7 @@
 export local jailbinmodecmd="vasile --binmode"
 export local jailsrcmodecmd="vasile --srcmode"
 export local jaildkmscmd="vasile --dkms"
+export local jailmandbcmd="mandb --create"
 export local jailportagecmd="emerge -kav "$jailtarget""
 export local jaildracutcmd="dracut -N -a dmsquash-live -a pollcdrom --force --kver="$kernver" /boot/"$jailramfsname""
 export local jailmkchainloadercmd="grub2-mkimage -d /usr/lib64/grub/i386-pc -o core.img -O i386-pc biosdisk part_msdos fat -p /boot/grub"

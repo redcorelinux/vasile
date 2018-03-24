@@ -44,6 +44,10 @@ jailisoenserv () {
 	done
 }
 
+jailisomkmandb() {
+	chroot "$jailsynctarget" su - "$jailuser" -c "$jailmandbcmd"
+}
+
 jailisomkdkms () {
 	chroot "$jailsynctarget" su - "$jailuser" -c "$jaildkmscmd"
 }
@@ -101,6 +105,11 @@ mkliveimg () {
 	jailisomnt
 	jailisobinmode
 	jailisostart
+	jailisodmnt
+	sync
+	# create mandb dbs (this will significantly reduce live session CPU usage)
+	jailisomnt
+	jailisomkmandb
 	jailisodmnt
 	sync
 	# compile and install DKMS modules, if any
