@@ -48,6 +48,10 @@ jailpkgsrcmode () {
 	chroot "$overlaypath" su - "$jailuser" -c "$jailsrcmodecmd"
 }
 
+jailpkgupgrade () {
+	chroot "$overlaypath" su - "$jailuser" -c "$jailupgradecmd"
+}
+
 jailpkgbuild () {
 	chroot "$overlaypath" su - "$jailuser" -c "$jailportagecmd"
 }
@@ -62,6 +66,7 @@ makepkg () {
 	checkjailsum
 	jailpkgprep
 	jailpkgsrcmode
+	jailpkgupgrade
 	jailpkgbuild
 	jailpkgstart
 	jailpkgdmnt
