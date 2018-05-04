@@ -39,7 +39,7 @@ jailisomkchload () {
 
 jailisoenserv () {
 	chroot "$jailsynctarget" su - "$jailuser" -c "rc-update add redcorelive boot"
-	for service in acpid alsasound avahi-daemon bluetooth cronie cupsd ModemManager NetworkManager ntpd openrc-settingsd samba syslog-ng ufw virtualbox-guest-additions xdm ; do
+	for service in acpid alsasound avahi-daemon bluetooth cronie cupsd ModemManager NetworkManager ntpd openrc-settingsd samba syslog-ng ufw xdm ; do
 		chroot "$jailsynctarget" su - "$jailuser" -c "rc-update add "$service" default"
 	done
 }
