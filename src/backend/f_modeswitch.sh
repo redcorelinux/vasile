@@ -15,7 +15,7 @@ rmaddonporttree () {
 }
 
 rmportcfgtree () {
-	einfo "I am removing ebuild tree configuration"
+	einfo "I am removing portage configuration"
 	rm ""$jailportcfgtarget"/make.conf" > /dev/null 2>&1
 	rm ""$jailportcfgtarget"/make.profile" > /dev/null 2>&1
 	rm "$jailportcfgtarget" > /dev/null 2>&1
@@ -81,7 +81,7 @@ dladdonportmintree () {
 
 dlportcfgtree () {
 	pushd /opt > /dev/null 2>&1
-	einfo "I am injecting ebuild tree configuration"
+	einfo "I am injecting portage configuration"
 	git clone https://gitlab.com/redcore/redcore-build.git
 	popd > /dev/null 2>&1
 }
@@ -98,44 +98,54 @@ injectportfulltree () {
 	dlportcfgtree
 }
 
-setbinmodecfg () {
-	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
-	ln -sf "$jailportcfgtarget"/make.conf.amd64-binmode "$jailportcfgtarget"/make.conf
+setmakeopts () {
+	einfo "I am setting portage to use $(getconf _NPROCESSORS_ONLN) jobs to compile packages"
+	# default MAKEOPTS value is -j64, but that's overkill for lower spec machines
+	# this will adjust MAKEOPTS to a value detected by $(getconf _NPROCESSORS_ONLN)
+	sed -i "s/\-j64/\-j$(getconf _NPROCESSORS_ONLN)/g" "$jailportcfgtarget"/global.conf/makeopts.conf # global makeopts (exclude kernel)
+	sed -i "s/\-j64/\-j$(getconf _NPROCESSORS_ONLN)/g" "$jailportcfgtarget"/env/makenoise.conf # kernel makeopts
+}
+
+setprofile () {
 	eselect profile set default/linux/amd64/17.0/hardened
 	env-update
 	. /etc/profile
+}
+
+setbinmodecfg () {
+	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
+	ln -sf "$jailportcfgtarget"/make.conf.amd64-binmode "$jailportcfgtarget"/make.conf
 }
 
 binmode () {
 	resetmode
 	injectportmintree
 	setbinmodecfg
+	setprofile
 }
 
 setmixedmodecfg () {
 	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
 	ln -sf "$jailportcfgtarget"/make.conf.amd64-mixedmode "$jailportcfgtarget"/make.conf
-	eselect profile set default/linux/amd64/17.0/hardened
-	env-update
-	. /etc/profile
 }
 
 mixedmode () {
 	resetmode
 	injectportfulltree
 	setmixedmodecfg
+	setmakeopts
+	setprofile
 }
 
 setsrcmodecfg () {
 	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
 	ln -sf "$jailportcfgtarget"/make.conf.amd64-srcmode "$jailportcfgtarget"/make.conf
-	eselect profile set default/linux/amd64/17.0/hardened
-	env-update
-	. /etc/profile
 }
 
 srcmode() {
 	resetmode
 	injectportfulltree
 	setsrcmodecfg
+	setmakeopts
+	setprofile
 }
