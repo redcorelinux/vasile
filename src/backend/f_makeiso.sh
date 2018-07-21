@@ -137,7 +137,7 @@ mkliveimg () {
 
 cfgbootldr () {
 	# fetch and install GRUB2 config files
-	git clone https://gitlab.com/"$distname"/boot-core.git "$jailbootldrdlpath"
+	git clone https://pagure.io/redcore/boot-core.git "$jailbootldrdlpath"
 	cp -avx "$jailbootldrcfgpath" "$jailrootpath"
 	sync
 }

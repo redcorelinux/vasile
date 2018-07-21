@@ -33,7 +33,7 @@ dlmainportfulltree () {
 	if [ ! -d ""$jailmainportpath"/.git" ] ; then
 		einfo "I am injecting Gentoo ebuild tree"
 		cd "$jailmainportpath" && git init > /dev/null 2>&1
-		git remote add origin http://redcorelinux.org/cgit/portage/
+		git remote add origin https://pagure.io/redcore/portage.git
 		git pull --depth=1 origin master
 		git branch -u origin/master master
 		rm -rf ""$jailmainportpath"/profiles/updates"
@@ -44,7 +44,7 @@ dlmainportmintree () {
 	if [ ! -d ""$jailmainportpath"/.git" ] ; then
 		einfo "I am injecting Gentoo ebuild tree"
 		cd "$jailmainportpath" && git init > /dev/null 2>&1
-		git remote add origin http://redcorelinux.org/cgit/portage/
+		git remote add origin https://pagure.io/redcore/portage.git
 		git config core.sparsecheckout true
 		echo "profiles/*" >> .git/info/sparse-checkout
 		echo "metadata/*" >> .git/info/sparse-checkout
@@ -59,7 +59,7 @@ dladdonportfulltree () {
 	if [ ! -d ""$jailaddonportpath"/.git" ] ; then
 		einfo "I am injecting Redcore ebuild tree"
 		cd "$jailaddonportpath" && git init > /dev/null 2>&1
-		git remote add origin http://redcorelinux.org/cgit/redcore-desktop/
+		git remote add origin https://pagure.io/redcore/redcore-desktop.git
 		git pull --depth=1 origin master
 		git branch -u origin/master master
 	fi
@@ -69,7 +69,7 @@ dladdonportmintree () {
 	if [ ! -d ""$jailaddonportpath"/.git" ] ; then
 		einfo "I am injecting Redcore ebuild tree"
 		cd "$jailaddonportpath" && git init > /dev/null 2>&1
-		git remote add origin http://redcorelinux.org/cgit/redcore-desktop/
+		git remote add origin https://pagure.io/redcore/redcore-desktop.git
 		git config core.sparsecheckout true
 		echo "profiles/*" >> .git/info/sparse-checkout
 		echo "metadata/*" >> .git/info/sparse-checkout
@@ -82,7 +82,7 @@ dladdonportmintree () {
 dlportcfgtree () {
 	pushd /opt > /dev/null 2>&1
 	einfo "I am injecting portage configuration"
-	git clone http://redcorelinux.org/cgit/redcore-build/
+	git clone https://pagure.io/redcore/redcore-build.git
 	popd > /dev/null 2>&1
 }
 
