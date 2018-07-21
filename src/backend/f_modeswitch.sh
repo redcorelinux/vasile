@@ -33,7 +33,7 @@ dlmainportfulltree () {
 	if [ ! -d ""$jailmainportpath"/.git" ] ; then
 		einfo "I am injecting Gentoo ebuild tree"
 		cd "$jailmainportpath" && git init > /dev/null 2>&1
-		git remote add origin https://gitlab.com/redcore/portage.git
+		git remote add origin http://redcorelinux.org/cgit/portage/
 		git pull --depth=1 origin master
 		git branch -u origin/master master
 		rm -rf ""$jailmainportpath"/profiles/updates"
@@ -44,7 +44,7 @@ dlmainportmintree () {
 	if [ ! -d ""$jailmainportpath"/.git" ] ; then
 		einfo "I am injecting Gentoo ebuild tree"
 		cd "$jailmainportpath" && git init > /dev/null 2>&1
-		git remote add origin https://gitlab.com/redcore/portage.git
+		git remote add origin http://redcorelinux.org/cgit/portage/
 		git config core.sparsecheckout true
 		echo "profiles/*" >> .git/info/sparse-checkout
 		echo "metadata/*" >> .git/info/sparse-checkout
@@ -59,7 +59,7 @@ dladdonportfulltree () {
 	if [ ! -d ""$jailaddonportpath"/.git" ] ; then
 		einfo "I am injecting Redcore ebuild tree"
 		cd "$jailaddonportpath" && git init > /dev/null 2>&1
-		git remote add origin https://gitlab.com/redcore/redcore-desktop.git
+		git remote add origin http://redcorelinux.org/cgit/redcore-desktop/
 		git pull --depth=1 origin master
 		git branch -u origin/master master
 	fi
@@ -69,7 +69,7 @@ dladdonportmintree () {
 	if [ ! -d ""$jailaddonportpath"/.git" ] ; then
 		einfo "I am injecting Redcore ebuild tree"
 		cd "$jailaddonportpath" && git init > /dev/null 2>&1
-		git remote add origin https://gitlab.com/redcore/redcore-desktop.git
+		git remote add origin http://redcorelinux.org/cgit/redcore-desktop/
 		git config core.sparsecheckout true
 		echo "profiles/*" >> .git/info/sparse-checkout
 		echo "metadata/*" >> .git/info/sparse-checkout
@@ -82,7 +82,7 @@ dladdonportmintree () {
 dlportcfgtree () {
 	pushd /opt > /dev/null 2>&1
 	einfo "I am injecting portage configuration"
-	git clone https://gitlab.com/redcore/redcore-build.git
+	git clone http://redcorelinux.org/cgit/redcore-build/
 	popd > /dev/null 2>&1
 }
 
