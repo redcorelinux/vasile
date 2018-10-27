@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
-rmmainporttree () {
+delmainporttree () {
 	einfo "I am removing Gentoo ebuild tree"
 	if [ -d ""$jailmainportpath"/.git" ] ; then
 		find "$jailmainportpath" -mindepth 1 -exec rm -rf {} \; > /dev/null 2>&1
 	fi
 }
 
-rmaddonporttree () {
+deladdonporttree () {
 	einfo "I am removing Redcore ebuild tree"
 	if [ -d ""$jailaddonportpath"/.git" ] ; then
 		find "$jailaddonportpath" -mindepth 1 -exec rm -rf {} \; > /dev/null 2>&1
 	fi
 }
 
-rmportcfgtree () {
+delportcfgtree () {
 	einfo "I am removing portage configuration"
 	rm ""$jailportcfgtarget"/make.conf" > /dev/null 2>&1
 	rm ""$jailportcfgtarget"/make.profile" > /dev/null 2>&1
@@ -24,12 +24,12 @@ rmportcfgtree () {
 
 resetmode () {
 	checkifroot
-	rmmainporttree
-	rmaddonporttree
-	rmportcfgtree
+	delmainporttree
+	deladdonporttree
+	delportcfgtree
 }
 
-dlmainportfulltree () {
+getmainportsrctree () {
 	if [ ! -d ""$jailmainportpath"/.git" ] ; then
 		einfo "I am injecting Gentoo ebuild tree"
 		cd "$jailmainportpath" && git init > /dev/null 2>&1
@@ -40,7 +40,7 @@ dlmainportfulltree () {
 	fi
 }
 
-dlmainportmintree () {
+getmainportbintree () {
 	if [ ! -d ""$jailmainportpath"/.git" ] ; then
 		einfo "I am injecting Gentoo ebuild tree"
 		cd "$jailmainportpath" && git init > /dev/null 2>&1
@@ -55,7 +55,7 @@ dlmainportmintree () {
 	fi
 }
 
-dladdonportfulltree () {
+getaddonportsrctree () {
 	if [ ! -d ""$jailaddonportpath"/.git" ] ; then
 		einfo "I am injecting Redcore ebuild tree"
 		cd "$jailaddonportpath" && git init > /dev/null 2>&1
@@ -65,7 +65,7 @@ dladdonportfulltree () {
 	fi
 }
 
-dladdonportmintree () {
+getaddonportbintree () {
 	if [ ! -d ""$jailaddonportpath"/.git" ] ; then
 		einfo "I am injecting Redcore ebuild tree"
 		cd "$jailaddonportpath" && git init > /dev/null 2>&1
@@ -79,23 +79,28 @@ dladdonportmintree () {
 	fi
 }
 
-dlportcfgtree () {
+getportcfgtree () {
 	pushd /opt > /dev/null 2>&1
 	einfo "I am injecting portage configuration"
 	git clone https://pagure.io/redcore/redcore-build.git
 	popd > /dev/null 2>&1
 }
 
-injectportmintree () {
-	dlmainportmintree
-	dladdonportmintree
-	dlportcfgtree
+getsrctree () {
+	getmainportsrctree
+	getaddonportsrctree
+	getportcfgtree
 }
 
-injectportfulltree () {
-	dlmainportfulltree
-	dladdonportfulltree
-	dlportcfgtree
+getbintree () {
+	getmainportbintree
+	getaddonportbintree
+	getportcfgtree
+}
+
+setmakeconf () {
+	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
+	ln -sf "$jailportcfgtarget"/make.conf.amd64-generic "$jailportcfgtarget"/make.conf
 }
 
 setmakeopts () {
@@ -112,40 +117,18 @@ setprofile () {
 	. /etc/profile
 }
 
-setbinmodecfg () {
-	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
-	ln -sf "$jailportcfgtarget"/make.conf.amd64-binmode "$jailportcfgtarget"/make.conf
-}
-
-binmode () {
+setbinmode () {
 	resetmode
-	injectportmintree
-	setbinmodecfg
-	setprofile
-}
-
-setmixedmodecfg () {
-	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
-	ln -sf "$jailportcfgtarget"/make.conf.amd64-mixedmode "$jailportcfgtarget"/make.conf
-}
-
-mixedmode () {
-	resetmode
-	injectportfulltree
-	setmixedmodecfg
+	getbintree
+	setmakeconf
 	setmakeopts
 	setprofile
 }
 
-setsrcmodecfg () {
-	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
-	ln -sf "$jailportcfgtarget"/make.conf.amd64-srcmode "$jailportcfgtarget"/make.conf
-}
-
-srcmode() {
+setsrcmode () {
 	resetmode
-	injectportfulltree
-	setsrcmodecfg
+	getsrctree
+	setmakeconf
 	setmakeopts
-	setprofile
+	setprofiles
 }
