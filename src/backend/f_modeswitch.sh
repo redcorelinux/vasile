@@ -130,5 +130,5 @@ setsrcmode () {
 	getsrctree
 	setmakeconf
 	setmakeopts
-	setprofiles
+	setprofile
 }
