@@ -21,11 +21,11 @@ case $1 in
 	--makeiso)
 		makeiso
 		;;
-	--binmode)
-		setbinmode
+	--reset)
+		reset
 		;;
-	--srcmode)
-		setsrcmode
+	--setup)
+		setup
 		;;
 	--dkms)
 		makedkms

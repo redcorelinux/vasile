@@ -44,8 +44,8 @@ jailpkgdmnt () {
 	umount -l "$ropath" > /dev/null 2>&1
 }
 
-jailpkgsrcmode () {
-	chroot "$overlaypath" su - "$jailuser" -c "$jailsrcmodecmd"
+jailpkgsetup () {
+	chroot "$overlaypath" su - "$jailuser" -c "$jailsetupcmd"
 }
 
 jailpkgupgrade () {
@@ -65,7 +65,7 @@ makepkg () {
 	checkifroot
 	checkjailsum
 	jailpkgprep
-	jailpkgsrcmode
+	jailpkgsetup
 	jailpkgupgrade
 	jailpkgbuild
 	jailpkgstart

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-export local jailbinmodecmd="vasile --binmode"
-export local jailsrcmodecmd="vasile --srcmode"
+export local jailsetupcmd="vasile --setup"
 export local jaildkmscmd="vasile --dkms"
 export local jailmandbcmd="mandb --create"
 export local jailportagecmd="emerge -kav "$jailtarget""

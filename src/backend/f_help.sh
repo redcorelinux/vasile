@@ -44,21 +44,16 @@ echo -e "\
 		the live filesystem will be compressed, live services will be autoenabled, live bootloader autoconfigured and in the end live iso image will be built. You will find
 		a list of predefined live services list hardcoded into "$colorstart"libvasile"$colorstop". Adjust it to suit your needs.
 
-	"$colorstart"--binmode"$colorstop"
-		This option will allow you to change the system state to binmode. In this state portage will allways use only binary packages from the binhost. It will fetch a minimal
-		portage tree without any ebuilds in it, but only with portage profiles, metadata and eclass. It will also fetch overlay and portage configuration files, and will adjust
-		"$colorstart"make.conf"$colorstop" for binary only usage. This system state is for those who just meet with the power of Gentoo.
+	"$colorstart"--reset"$colorstop"
+		This option will allow you to reset portage. It will remove the portage tree snapshot, the Redcore Linux ebuild overlay, the portage configuration files and reset the system profile.
+		Usually you will never want to call this option directly, unless you really really really know what are you doing. It is called automatically at setup stage.
 
-		!!! WARNING !!! : Never never never modify or create any file in "$colorstart"/etc/portage/"$colorstop" in this state.
+		"$colorstart"!!! WARNING !!!"$colorstop"
+		Never never never leave the system in this state. 
+		You will no longer be able to install/remove/upgrade any packages untill you set the system profile, get the portage tree, overlays and configure portage.
 
-	"$colorstart"--srcmode"$colorstop"
-		This option will allow you to change the system state to srcmode. In more clear terms, it will transform your Kogaion/Argent/Redcore system into pure Gentoo. Binary packages
-		from the binhost will be ignored, and you will only install packages building from portage tree using emerge. It will fetch the full portage tree, the overlay and portage
-		configuration files and adjust "$colorstart"make.conf"$colorstop" for ebuild only usage.
+	"$colorstart"--setup"$colorstop"
+		This option will allow you to setup portage. It will fetch the portage tree snapshot, the Redcore Linux ebuild overlay, the portage configuration files and setup the system profile."
 
-		In this system state you can modify whatever you want in "$colorstart"/etc/portage/"$colorstop". You can adjust useflags, keywords, masks, build environment and rebuild the whole system to suit you.
-		You have the full power of Gentoo available only one command away!
-
-		!!! WARNING !!! : Only use this system state if you have a strong knowledge of Gentoo tools e.g.: "$colorstart"emerge, equery, layman, eix, qlist, useflags, keywords, masks"$colorstop".	"
 exit 0
 }

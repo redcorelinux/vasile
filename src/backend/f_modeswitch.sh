@@ -22,14 +22,7 @@ delportcfgtree () {
 	rm -rf "$jailportvcspath" > /dev/null 2>&1
 }
 
-resetmode () {
-	checkifroot
-	delmainporttree
-	deladdonporttree
-	delportcfgtree
-}
-
-getmainportsrctree () {
+getmainporttree () {
 	if [ ! -d ""$jailmainportpath"/.git" ] ; then
 		einfo "I am injecting Gentoo ebuild tree"
 		cd "$jailmainportpath" && git init > /dev/null 2>&1
@@ -40,40 +33,11 @@ getmainportsrctree () {
 	fi
 }
 
-getmainportbintree () {
-	if [ ! -d ""$jailmainportpath"/.git" ] ; then
-		einfo "I am injecting Gentoo ebuild tree"
-		cd "$jailmainportpath" && git init > /dev/null 2>&1
-		git remote add origin https://pagure.io/redcore/portage.git
-		git config core.sparsecheckout true
-		echo "profiles/*" >> .git/info/sparse-checkout
-		echo "metadata/*" >> .git/info/sparse-checkout
-		echo "eclass/*" >> .git/info/sparse-checkout
-		git pull --depth=1 origin master
-		git branch -u origin/master master
-		rm -rf ""$gentooportdir"/profiles/updates"
-	fi
-}
-
-getaddonportsrctree () {
+getaddonporttree () {
 	if [ ! -d ""$jailaddonportpath"/.git" ] ; then
 		einfo "I am injecting Redcore ebuild tree"
 		cd "$jailaddonportpath" && git init > /dev/null 2>&1
 		git remote add origin https://pagure.io/redcore/redcore-desktop.git
-		git pull --depth=1 origin master
-		git branch -u origin/master master
-	fi
-}
-
-getaddonportbintree () {
-	if [ ! -d ""$jailaddonportpath"/.git" ] ; then
-		einfo "I am injecting Redcore ebuild tree"
-		cd "$jailaddonportpath" && git init > /dev/null 2>&1
-		git remote add origin https://pagure.io/redcore/redcore-desktop.git
-		git config core.sparsecheckout true
-		echo "profiles/*" >> .git/info/sparse-checkout
-		echo "metadata/*" >> .git/info/sparse-checkout
-		echo "eclass/*" >> .git/info/sparse-checkout
 		git pull --depth=1 origin master
 		git branch -u origin/master master
 	fi
@@ -84,18 +48,6 @@ getportcfgtree () {
 	einfo "I am injecting portage configuration"
 	git clone https://pagure.io/redcore/redcore-build.git
 	popd > /dev/null 2>&1
-}
-
-getsrctree () {
-	getmainportsrctree
-	getaddonportsrctree
-	getportcfgtree
-}
-
-getbintree () {
-	getmainportbintree
-	getaddonportbintree
-	getportcfgtree
 }
 
 setmakeconf () {
@@ -117,17 +69,21 @@ setprofile () {
 	. /etc/profile
 }
 
-setbinmode () {
-	resetmode
-	getbintree
-	setmakeconf
-	setmakeopts
-	setprofile
+reset () {
+	checkifroot
+	delmainporttree
+	deladdonporttree
+	delportcfgtree
 }
 
-setsrcmode () {
-	resetmode
-	getsrctree
+setup () {
+	checkifroot
+	delmainporttree
+	deladdonporttree
+	delportcfgtree
+	getmainporttree
+	getaddonporttree
+	getportcfgtree
 	setmakeconf
 	setmakeopts
 	setprofile

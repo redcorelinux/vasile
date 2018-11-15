@@ -20,8 +20,8 @@ jailisodmnt () {
 	umount -l "$jailsynctarget"/var/cache/packages > /dev/null 2>&1
 }
 
-jailisobinmode () {
-	chroot "$jailsynctarget" su - "$jailuser" -c "$jailbinmodecmd"
+jailisosetup () {
+	chroot "$jailsynctarget" su - "$jailuser" -c "$jailsetupcmd"
 }
 
 jailisomkramfs () {
@@ -103,7 +103,7 @@ mkliveimg () {
 	sync
 	# chroot into live filesystem image
 	jailisomnt
-	jailisobinmode
+	jailisosetup
 	jailisostart
 	jailisodmnt
 	sync
