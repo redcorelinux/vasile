@@ -58,7 +58,7 @@ setjobs () {
 	einfo "I am setting portage to use $(getconf _NPROCESSORS_ONLN) jobs to compile packages"
 	# default MAKEOPTS value is -j64, but that's overkill for lower spec machines
 	# this will adjust MAKEOPTS to a value detected by $(getconf _NPROCESSORS_ONLN)
-	sed -i "s/\-j64/\-j$(getconf _NPROCESSORS_ONLN)/g" "$jailportcfgtarget"/global.conf/makeopts.conf # global makeopts (exclude kernel)
+	sed -i "s/\-j64/\-j$(getconf _NPROCESSORS_ONLN)/g" "$jailportcfgtarget"/make.conf/makeopts.conf # global makeopts (exclude kernel)
 	sed -i "s/\-j64/\-j$(getconf _NPROCESSORS_ONLN)/g" "$jailportcfgtarget"/env/makenoise.conf # kernel makeopts
 }
 
