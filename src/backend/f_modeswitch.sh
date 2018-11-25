@@ -50,12 +50,11 @@ getportcfgtree () {
 	popd > /dev/null 2>&1
 }
 
-setmakeconf () {
+setportage () {
 	ln -sf "$jailportcfgsource" "$jailportcfgtarget"
-	ln -sf "$jailportcfgtarget"/make.conf.amd64-generic "$jailportcfgtarget"/make.conf
 }
 
-setmakeopts () {
+setjobs () {
 	einfo "I am setting portage to use $(getconf _NPROCESSORS_ONLN) jobs to compile packages"
 	# default MAKEOPTS value is -j64, but that's overkill for lower spec machines
 	# this will adjust MAKEOPTS to a value detected by $(getconf _NPROCESSORS_ONLN)
@@ -64,7 +63,7 @@ setmakeopts () {
 }
 
 setprofile () {
-	eselect profile set default/linux/amd64/17.0/hardened
+	eselect profile set "default/linux/amd64/17.0/hardened"
 	env-update
 	. /etc/profile
 }
@@ -84,7 +83,7 @@ setup () {
 	getmainporttree
 	getaddonporttree
 	getportcfgtree
-	setmakeconf
-	setmakeopts
+	setportage
+	setjobs
 	setprofile
 }
