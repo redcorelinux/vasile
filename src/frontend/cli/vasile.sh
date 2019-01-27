@@ -21,6 +21,9 @@ case $1 in
 	--makeiso)
 		makeiso
 		;;
+	--adapt)
+		adapt
+		;;
 	--reset)
 		reset
 		;;

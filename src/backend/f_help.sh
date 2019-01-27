@@ -44,6 +44,11 @@ echo -e "\
 		the live filesystem will be compressed, live services will be autoenabled, live bootloader autoconfigured and in the end live iso image will be built. You will find
 		a list of predefined live services list hardcoded into "$colorstart"libvasile"$colorstop". Adjust it to suit your needs.
 
+	"$colorstart"--adapt"$colorstop"
+		This option will allow you to adjust the MAKEOPTS variable of portage. The default value is -j64 (compile using 64 CPU cores), but this is overkill for lower spec machines.
+		You must call this option on a fresh install (to override the above overkill defaults) or when you add, remove, enable or disable CPU's (to adapt to more or less CPU cores). 
+		Otherwise, it is called automatically at setup stage.
+
 	"$colorstart"--reset"$colorstop"
 		This option will allow you to reset portage. It will remove the portage tree snapshot, the Redcore Linux ebuild overlay, the portage configuration files and reset the system profile.
 		Usually you will never want to call this option directly, unless you really really really know what are you doing. It is called automatically at setup stage.
